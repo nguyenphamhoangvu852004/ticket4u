@@ -1,0 +1,9 @@
+# Ignore Docker volumes and data directories
+data/
+data/mysql_data/
+data/mysql_data/mysql.sock
+
+# Optional - ignore logs and temporary build files
+*.log
+*.tmp
+*.cache

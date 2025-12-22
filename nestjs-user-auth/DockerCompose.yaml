@@ -1,0 +1,25 @@
+services:
+  nestjs-auth-user-service:
+    build: .
+    container_name: nestjs-auth-user-service
+    environment:
+      NODE_ENV: container
+    env_file:
+      - .env.container
+    ports:
+      - 8087:8087
+    depends_on:
+      - mysql
+      - redis
+  mysql:
+    image: mysql:8.0
+    container_name: user-auth-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: shopdev
+    ports:
+      - 3303:3306
+  redis:
+    image: redis:8.0
+    container_name: users-auth-redis
+    ports:
+      - 6303:6379

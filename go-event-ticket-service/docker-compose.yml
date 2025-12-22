@@ -1,0 +1,180 @@
+version: "3.9"
+
+networks:
+  go-event-ticket-networks:
+    driver: bridge
+
+services:
+  db:
+    container_name: mysql-event-ticket-container
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: shopdev
+      MYSQL_DATABASE: ticket4u_test
+    ports:
+      - "3302:3306"
+    volumes:
+      - ./data/mysql_data:/var/lib/mysql
+    networks:
+      - go-event-ticket-networks
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pshopdev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    container_name: redis-event-ticket-container
+    image: redis:8.0
+    ports:
+      - "6302:6379"
+    networks:
+      - go-event-ticket-networks
+
+  migrate:
+    container_name: migrate-database-container
+    image: golang:1.24-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+    networks:
+      - go-event-ticket-networks
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "
+        go install github.com/pressly/goose/v3/cmd/goose@latest &&
+        goose -dir /app/sql/schema mysql 'root:shopdev@tcp(db:3306)/ticket4u_test' up
+      "
+
+  sqlc:
+    container_name: sqlc-container
+    image: sqlc/sqlc:latest
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: ["generate", "-f", "/app/sqlc.yaml"]
+    networks:
+      - go-event-ticket-networks
+
+  product:
+    container_name: go-event-ticket-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8085:8085"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - go-event-ticket-networks
+
+# networks:
+#   go-event-ticket-networks:
+#     driver: bridge
+
+# services:
+#   db:
+#     container_name: mysql-event-ticket-container
+#     image: mysql:8.0
+#     environment:
+#       MYSQL_ROOT_PASSWORD: shopdev
+#       MYSQL_DATABASE: ticket4u_test
+#     networks:
+#       - go-event-ticket-networks
+#     ports:
+#       - "3302:3306"
+#     volumes:
+#       - ./data/mysql_data:/var/lib/mysql
+
+#     healthcheck:
+#       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+#       interval: 5s
+#       timeout: 5s
+#       retries: 10
+#   redis:
+#     container_name: redis-event-ticket-container
+#     image: redis:8.0
+#     networks:
+#       - go-event-ticket-networks
+#     ports:
+#       - "6302:6379"
+
+#   migrate:
+#     container_name: migrate-database-container
+#     image: golang:1.24-alpine
+#     working_dir: /app
+#     volumes:
+#       - ..:/app
+#     networks:
+#       - go-event-ticket-networks
+#     depends_on:
+#       db:
+#         condition: service_healthy
+#     entrypoint: >
+#       sh -c "
+#         go install github.com/pressly/goose/v3/cmd/goose@latest &&
+#         goose -dir /app/sql/schema mysql 'root:shopdev@tcp(db:3306)/ticket4u_test' up
+#       "
+
+#   sqlc:
+#     image: sqlc/sqlc:latest
+#     working_dir: /app
+#     container_name: sqlc-container
+#     volumes:
+#       - .:/app
+#     command: ["generate", "-f", "/app/sqlc.yaml"]
+#     networks:
+#       - go-event-ticket-networks
+
+#   product:
+#     build:
+#       context: ..
+#       dockerfile: Dockerfile
+#     container_name: go-event-ticket-service
+#     ports:
+#       - "8085:8085"
+#     depends_on:
+#       - db
+#       - redis
+#     networks:
+#       - go-event-ticket-networks
+
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: prometheus
+  #   volumes:
+  #     - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+  #     - ./data/prometheus_data:/prometheus
+  #   command:
+  #     - '--config.file=/etc/prometheus/prometheus.yml'
+  #     - '--storage.tsdb.path=/prometheus'
+  #     - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+  #     - '--web.console.templates=/usr/share/prometheus/consoles'
+  #   ports:
+  #     - 9090:9090
+  #   networks:
+  #     - go-event-ticket-networks
+
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   container_name: grafana-container
+  #   hostname: grafana
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - GF_SECURITY_ADMIN_USER=admin
+  #     - GF_SECURITY_ADMIN_PASSWORD=admin
+  #     - GF_USERS_ALLOW_SIGN_UP=false
+  #     - GF_SERVER_DOMAIN=localhost
+  #     - GF_LOG_MODE=console
+  #     - GF_LOG_FILTERS=alerting.notifier.slack:debug,alertmanager:debug,ngalert:debug
+  #   volumes:
+  #     - ./data/grafana_storage:/var/lib/grafana
+  #   networks:
+  #     - go-event-ticket-networks

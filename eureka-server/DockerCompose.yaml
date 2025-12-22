@@ -1,0 +1,8 @@
+services:
+  eureka-server:
+    build: .
+    container_name: eureka-server
+    image: eureka-server
+    ports:
+      - 8761:8761
+  

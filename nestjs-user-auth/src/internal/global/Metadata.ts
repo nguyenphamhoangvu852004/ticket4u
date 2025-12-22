@@ -1,0 +1,3 @@
+export const PERMISSONS = ['READ', 'CREATE', 'UPDATE', 'DELETE'];
+export const RESOURCES = ['USER_PROFILE', 'EVENT', 'CATEGORY', 'EVENT_TIME', 'TICKET', 'ORDER'];
+export const ACTORS = ['USER', 'ADMIN', 'ORGANIZER'];

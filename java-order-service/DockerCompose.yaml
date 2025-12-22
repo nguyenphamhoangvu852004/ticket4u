@@ -1,0 +1,18 @@
+services:
+  order-mysql:
+    container_name: order-mysql
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: shopdev
+      MYSQL_DATABASE: ticket4u_test
+    ports:
+      - "3301:3306"
+  java-order-service:
+    build: .
+    container_name: java-order-service
+    ports:
+      - "8086:8086"
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - order-mysql

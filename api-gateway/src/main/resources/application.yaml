@@ -1,0 +1,56 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+
+      routes:
+        - id: event-route
+          uri: lb://EVENT-TICKET-SERVICE
+          predicates:
+            - Path=/api/v1/2025/events/**
+        - id: category-route
+          uri: lb://EVENT-TICKET-SERVICE
+          predicates:
+            - Path=/api/v1/2025/categories/**
+        - id: ticket-route
+          uri: lb://EVENT-TICKET-SERVICE
+          predicates:
+            - Path=/api/v1/2025/tickets/**
+        - id: event-times-route
+          uri: lb://EVENT-TICKET-SERVICE
+          predicates:
+            - Path=/api/v1/2025/eventTimes/**
+        - id: auth-route
+          uri: lb://AUTH-USER-SERVICE
+          predicates:
+            - Path=/api/v1/2025/auth/**
+        - id: orders-route
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/api/v1/2025/orders/**
+        - id: orders-route-admin
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/api/v1/2025/admins/orders/**
+        - id: orders-route-user
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/api/v1/2025/users/orders/**
+        - id: users-route
+          uri: lb://AUTH-USER-SERVICE
+          predicates:
+            - Path=/api/v1/2025/users/**
+     
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true

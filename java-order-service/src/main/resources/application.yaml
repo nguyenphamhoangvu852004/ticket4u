@@ -1,0 +1,53 @@
+app:
+    product-url: http://go-event-ticket-service:8085/api/v1/2025
+    # product-url: http://localhost:8085/api/v1/2025
+server:
+    servlet:
+        context-path: /api/v1/2025
+    port: 8086
+
+spring:
+    application:
+        name: order-service
+    jackson:
+        default-property-inclusion: non_null
+    datasource:
+        url: jdbc:mysql://order-mysql:3306/ticket4u_test
+        # url: jdbc:mysql://localhost:3301/ticket4u_test
+        username: root
+        password: shopdev
+        driver-class-name: com.mysql.cj.jdbc.Driver
+    jpa:
+        hibernate:
+            ddl-auto: none
+        show-sql: true
+        properties:
+            hibernate:
+                dialect: org.hibernate.dialect.MySQL8Dialect
+    kafka:
+        # bootstrap-servers: kafka-1:19092,kafka-2:19093,kafka-3:19094
+        bootstrap-servers: kafka-kafka-1-1:9092
+        producer:
+            key-serializer: org.apache.kafka.common.serialization.StringSerializer
+            value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+        consumer:
+            key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+            value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+            properties:
+                spring.json.trusted.packages: "*"
+    flyway:
+        enabled: true
+        locations: classpath:db/migration
+        baseline-version: 0
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+
+login:
+    user:
+        jwt:
+            secret: abcxyz

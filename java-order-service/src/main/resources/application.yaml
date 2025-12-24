@@ -1,6 +1,13 @@
 app:
     product-url: http://go-event-ticket-service:8085/api/v1/2025
     # product-url: http://localhost:8085/api/v1/2025
+
+springdoc:
+    api-docs:
+        path: /order-service/swagger/json
+    swagger-ui:
+        path: /order-service/swagger/ui
+    
 server:
     servlet:
         context-path: /api/v1/2025

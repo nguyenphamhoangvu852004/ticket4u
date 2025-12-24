@@ -1,4 +1,5 @@
 server:
+  forward-headers-strategy: framework
   port: 8080
 
 spring:
@@ -11,6 +12,20 @@ spring:
           enabled: false
 
       routes:
+        # Swagger UI Routes
+        - id: auth-swagger
+          uri: lb://AUTH-USER-SERVICE
+          predicates:
+            - Path=/nestjs-user-auth/swagger/**
+        - id: order-swagger
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/api/v1/2025/order-service/swagger/**
+        - id: event-swagger
+          uri: lb://EVENT-TICKET-SERVICE
+          predicates:
+            - Path=/event-ticket-service/swagger/**
+        # Application Routes
         - id: event-route
           uri: lb://EVENT-TICKET-SERVICE
           predicates:
@@ -47,6 +62,17 @@ spring:
           uri: lb://AUTH-USER-SERVICE
           predicates:
             - Path=/api/v1/2025/users/**
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: Auth User Service
+        url: /nestjs-user-auth/swagger/json
+      - name: Order Service
+        url: /api/v1/2025/order-service/swagger/json
+      # - name: Event Ticket Service
+      #   url: /event-ticket-service/swagger/json
      
 eureka:
   client:

@@ -291,8 +291,6 @@ export class UserRepositoryImplementation implements UserRepositoryInterface {
         nickname: userProfileModel.nickname,
         state: userProfileModel.state,
         isAuthenticated: userProfileModel.isAuthenticated,
-        roles: roles.map((role) => role.name),
-        permissions: permissions.map((permission) => permission.permission),
         createdAt: userProfileModel.createdAt,
         modifiedAt: userProfileModel.modifiedAt,
         deletedAt: userProfileModel.deletedAt,

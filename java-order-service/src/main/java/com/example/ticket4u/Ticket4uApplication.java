@@ -11,7 +11,7 @@ import io.swagger.v3.oas.annotations.info.Info;
 
 @OpenAPIDefinition(
     info = @Info(
-        title = "User Service API",
+        title = "Order Service API",
         version = "1.0.0",
         description = "API managements for Order Service",
         contact = @Contact(

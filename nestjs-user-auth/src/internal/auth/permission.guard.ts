@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { AuthServiceImplementation } from '@/internal/auth/application/auth.service.implementation';
 import { AuthServiceInterface } from '@/internal/auth/application/auth.service.interface';
 import { GetUserBaseReqDto, GetUserBaseResDto, RoleResDto } from '@/internal/auth/application/dto/get.dto';
 import { CanActivate, ExecutionContext, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
@@ -9,7 +8,7 @@ import { Reflector } from '@nestjs/core';
 
 @Injectable()
 export class PermissionGuard implements CanActivate {
-  @Inject(AuthServiceImplementation)
+  @Inject('AuthService')
   private readonly authService: AuthServiceInterface;
 
   @Inject(Reflector)

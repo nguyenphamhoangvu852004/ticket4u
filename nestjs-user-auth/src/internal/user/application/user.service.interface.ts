@@ -5,6 +5,7 @@ import {
   ConfirmChangePasswordResDto,
 } from '@/internal/user/application/dto/changePassword.dto';
 import { CreateProfileReqDto, CreateProfileResDto } from '@/internal/user/application/dto/createProfile.dto';
+import { SetRoleToUserReqDto, SetRoleToUserResDto } from '@/internal/user/application/dto/setRole.dto';
 import { UpdateUserProfileReqDto, UpdateUserProfileResDto } from '@/internal/user/application/dto/update.dto';
 import {
   VerifyChangePasswordReqDto,
@@ -31,4 +32,5 @@ export interface UserServiceInterface {
   verifyChangePassword(reqData: VerifyChangePasswordReqDto): Promise<VerifyChangePasswordResDto>;
   confirmChangePassword(reqData: ConfirmChangePasswordReqDto): Promise<ConfirmChangePasswordResDto>;
   updateUserProfile(reqData: UpdateUserProfileReqDto): Promise<UpdateUserProfileResDto>;
+  setRoleToUser(reqData: SetRoleToUserReqDto): Promise<SetRoleToUserResDto>;
 }

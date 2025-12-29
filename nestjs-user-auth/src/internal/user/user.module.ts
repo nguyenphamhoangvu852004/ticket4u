@@ -1,4 +1,6 @@
+import { AuthModule } from '@/internal/auth/auth.module';
 import { AuthRepositoryImplementation } from '@/internal/auth/infrastructure/repositoryImpl/auth.repository.implementation';
+import { PermissionGuard } from '@/internal/auth/permission.guard';
 import { Module } from '@nestjs/common';
 import { UserServiceImpl } from 'src/internal/user/application/user.service.implementation';
 import { UserRepositoryImplementation } from 'src/internal/user/infrastructure/repositoryImpl/user.repository.implementation';
@@ -6,7 +8,7 @@ import { UserHandler } from 'src/internal/user/presentation/user.handler';
 import { UserHttp } from 'src/internal/user/presentation/user.http';
 
 @Module({
-  imports: [],
+  imports: [AuthModule],
   controllers: [UserHttp],
   providers: [
     {
@@ -22,7 +24,7 @@ import { UserHttp } from 'src/internal/user/presentation/user.http';
       useClass: AuthRepositoryImplementation,
     },
     UserHandler,
+    PermissionGuard,
   ],
-  exports: ['UserService'],
 })
 export class UserModule {}

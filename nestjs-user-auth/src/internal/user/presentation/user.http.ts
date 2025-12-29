@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { ApiResponseData } from '@/libs/swagger/swagger.utils';
 import { LoginGuard } from '@/internal/auth/login.guard';
-import { Body, Controller, Get, Patch, Post, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, Query, Req, Res, SetMetadata, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { log } from 'console';
 import { Request, Response } from 'express';
@@ -26,6 +26,8 @@ import {
   VerifyChangePasswordResDto,
 } from '@/internal/user/application/dto/verifyChangePassword.dto';
 import { UpdateUserProfileReqDto, UpdateUserProfileResDto } from '@/internal/user/application/dto/update.dto';
+import { SetRoleToUserReqDto, SetRoleToUserResDto } from '@/internal/user/application/dto/setRole.dto';
+import { PermissionGuard } from '@/internal/auth/permission.guard';
 
 @ApiTags('Users')
 @Controller('users')
@@ -132,6 +134,19 @@ export class UserHttp {
 
     console.log('🚀 ~ UserHttp ~ updateProfile ~ reqData:', reqData);
     const responseData: ResponseData<UpdateUserProfileResDto> = await this.userHandler.updateUserProfile(reqData);
+    res.status(responseData.code).json(responseData);
+    return;
+  }
+  @ApiOperation({ summary: 'Set role to user' })
+  @ApiBearerAuth()
+  @ApiResponseData(SetRoleToUserResDto)
+  @SetMetadata('actors', ['ADMIN'])
+  @SetMetadata('resources', ['USER_PROFILE'])
+  @SetMetadata('permissions', ['UPDATE'])
+  @UseGuards(LoginGuard, PermissionGuard)
+  @Patch('/roles')
+  async setRoleToUser(@Req() req: Request, @Res() res: Response, @Body() reqData: SetRoleToUserReqDto) {
+    const responseData: ResponseData<SetRoleToUserResDto> = await this.userHandler.setRoleToUser(reqData);
     res.status(responseData.code).json(responseData);
     return;
   }

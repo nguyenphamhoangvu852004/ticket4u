@@ -26,6 +26,7 @@ import {
 import { UserServiceInterface } from 'src/internal/user/application/user.service.interface';
 import { ErrorCustom } from 'src/utils/ErrorCustom';
 import { confirmChangePasswordReqDto, verifyChangePasswordReqDto } from '@/internal/user/presentation/validation';
+import { SetRoleToUserReqDto, SetRoleToUserResDto } from '@/internal/user/application/dto/setRole.dto';
 
 @Injectable()
 export class UserHandler {
@@ -142,6 +143,18 @@ export class UserHandler {
         (error as ErrorCustom).statusCode,
         error.message as string,
         null as unknown as CreateProfileResDto,
+      );
+    }
+  }
+  async setRoleToUser(reqData: SetRoleToUserReqDto): Promise<ResponseData<SetRoleToUserResDto>> {
+    try {
+      const data = await this.userService.setRoleToUser(reqData);
+      return ResponseData.success(data);
+    } catch (error) {
+      return ResponseData.error(
+        (error as ErrorCustom).statusCode,
+        error.message as string,
+        null as unknown as SetRoleToUserResDto,
       );
     }
   }

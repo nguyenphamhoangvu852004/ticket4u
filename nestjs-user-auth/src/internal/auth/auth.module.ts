@@ -23,5 +23,6 @@ import { Module } from '@nestjs/common';
     AuthServiceImplementation,
     AuthHandler,
   ],
+  exports: ['AuthService'],
 })
 export class AuthModule {}

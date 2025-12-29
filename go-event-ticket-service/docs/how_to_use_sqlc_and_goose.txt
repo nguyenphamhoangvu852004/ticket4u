@@ -30,10 +30,11 @@ create:
 goose -dir sql/schema create <name_of_file> sql
 
 up:
-goose -dir sql/schema up
+goose -dir sql/schema mysql "root:shopdev@tcp(127.0.0.1:3302)/ticket4u_test?parseTime=true" up // or up-by-one
+
 
 down:   
-goose -dir sql/schema down
+goose -dir sql/schema mysql "root:shopdev@tcp(127.0.0.1:3302)/ticket4u_test?parseTime=true" down
 
 status: 
 goose -dir sql/schema status

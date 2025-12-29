@@ -11,7 +11,13 @@ sql:
       go:
         package: "database"
         out: "internal/database"
-    
+
+2. Run the following command in the terminal:
+
+sqlc generate
+
+3. The generated files will be in the "internal/database" directory.
+
 Setting up Goose Golang:
 
 1. Install goose

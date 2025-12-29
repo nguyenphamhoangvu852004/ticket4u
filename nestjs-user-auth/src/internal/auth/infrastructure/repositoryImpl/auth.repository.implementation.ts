@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
 import { MysqlDatasource } from '@/datasource/mysql.datasource';
@@ -25,6 +27,50 @@ export class AuthRepositoryImplementation implements AuthRepositoryInterface {
     this.userVerifyRepo = MysqlDatasource.getInstance().dataSource.getRepository(UserVerificationsModelSchema);
     this.userRepo = MysqlDatasource.getInstance().dataSource.getRepository(UserModelSchema);
   }
+  async removeAllRolesOfUser(userId: string): Promise<number> {
+    try {
+      // get all roles from userId
+      const datasource = MysqlDatasource.getInstance().dataSource.getRepository('user_roles');
+      const deleteResult = await datasource.delete({ user_id: userId });
+      if (deleteResult.affected === 0) {
+        return 0;
+      }
+      return 1;
+    } catch (error: unknown) {
+      console.error('Repository error at removeAllRolesOfUser:', error);
+      if (error instanceof ErrorCustom) throw error;
+      const message = error instanceof Error ? error.message : 'Internal server error';
+      throw new ErrorCustom(HttpStatus.INTERNAL_SERVER_ERROR, message);
+    }
+  }
+
+  async getRoles(): Promise<RoleEntity[]> {
+    try {
+      const datasource = MysqlDatasource.getInstance().dataSource.getRepository('roles');
+      const rolesFromDb = await datasource.find({ relations: ['permissions'] });
+      const roles: RoleEntity[] = [];
+      for (const role of rolesFromDb) {
+        const permissions: PermissionEntity[] = [];
+        for (const permission of role.permissions) {
+          permissions.push(
+            new PermissionEntity({
+              id: permission.id,
+              name: permission.permission,
+              resource: permission.resource,
+            }),
+          );
+        }
+        roles.push(new RoleEntity({ id: role.id, name: role.name, permissions: permissions })); // tạo role entity
+      }
+      return roles;
+    } catch (error) {
+      console.error('Repository error at getRoles:', error);
+      if (error instanceof ErrorCustom) throw error;
+      const message = error instanceof Error ? error.message : 'Internal server error';
+      throw new ErrorCustom(HttpStatus.INTERNAL_SERVER_ERROR, message);
+    }
+  }
+
   async getOneByUserId(userId: string): Promise<UserEntity | null> {
     try {
       const user: UserModelSchema | null = await this.userRepo.findOne({

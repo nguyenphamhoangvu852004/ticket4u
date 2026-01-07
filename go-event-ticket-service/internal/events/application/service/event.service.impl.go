@@ -319,8 +319,14 @@ func (service *eventService) GetEventsList(ctx context.Context, reqData *dto.Get
 		resDto.List = append(resDto.List, eventDto)
 	}
 
+	totalItems, err := service.eventsRepo.Count(ctx)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(totalItems)
+
 	resDto.Metadata = utils.NewPaginationMeta(
-		len(resDto.List),
+		int(totalItems),
 		int(uintPage),
 		int(uintSize),
 	)

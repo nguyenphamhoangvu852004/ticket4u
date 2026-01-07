@@ -1,3 +1,4 @@
+import { RoleEntity } from '@/internal/auth/domain/entity/role.entity';
 import { UserVerificationsEntity } from '@/internal/auth/domain/entity/userVerifications.entity';
 import { UserEntity } from '@/internal/user/domain/entity/user.entity';
 
@@ -14,4 +15,6 @@ export interface AuthRepositoryInterface {
   updatePasswordInUsersTable(userKey: string, newPassword: string): Promise<number>;
   updateLoginInfoInUsersTable(user: UserEntity): Promise<number>;
   saveRole(userId: string, roles: string[]): Promise<number>;
+  getRoles(): Promise<RoleEntity[]>;
+  removeAllRolesOfUser(userId: string): Promise<number>;
 }

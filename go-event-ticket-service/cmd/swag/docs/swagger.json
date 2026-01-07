@@ -1,0 +1,75 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API Document for Event Ticket Service",
+        "title": "API Document for Event Ticket Service",
+        "termsOfService": "https://github.com/nguyenphamhoangvu852004/ticket4u",
+        "contact": {
+            "name": "nguyenphamhoangvu",
+            "url": "https://github.com/nguyenphamhoangvu852004/ticket4u",
+            "email": "nguyenphamhoangvu852004@gmail.com"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8085",
+    "basePath": "/api/v1/2025",
+    "paths": {
+        "/events": {
+            "get": {
+                "description": "Get list events with pagination",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Events"
+                ],
+                "summary": "Get list events",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "1",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "response.APIResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "data return null not show"
+                },
+                "error": {
+                    "description": "Error return null not show"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

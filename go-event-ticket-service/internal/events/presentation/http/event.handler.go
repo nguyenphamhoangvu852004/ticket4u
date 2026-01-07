@@ -62,6 +62,16 @@ func (h *EventHandler) GetEventHandler(ctx *gin.Context) (res interface{}, err e
 	return event, nil
 }
 
+// Get available events documentation
+// @Summary      Get list events
+// @Description  Get list events with pagination
+// @Tags         Events
+// @Accept       json
+// @Produce      json
+// @Param        page query string false "Page number" default(1)
+// @Success      200  {object}  response.APIResponse
+// @Failure      500  {object}  response.APIResponse
+// @Router       /events [get]
 func (h *EventHandler) GetListEventHandler(ctx *gin.Context) (res interface{}, err error) {
 	page := ctx.DefaultQuery("page", "1")
 	rs, err := h.service.GetEventsList(ctx, &dto.GetEventsListReq{Page: page})

@@ -21,4 +21,5 @@ docker-start:
 docker-stop:
 	docker-compose --file environment/docker-compose-container.yml stop
 
-
+swagger: 
+	swag init -g ./cmd/server/main.go -o ./cmd/swag/docs

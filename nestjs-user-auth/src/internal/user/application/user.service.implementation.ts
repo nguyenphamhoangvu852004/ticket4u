@@ -7,6 +7,7 @@ import {
   ConfirmChangePasswordResDto,
 } from '@/internal/user/application/dto/changePassword.dto';
 import { CreateProfileReqDto, CreateProfileResDto } from '@/internal/user/application/dto/createProfile.dto';
+import { SetRoleToUserReqDto, SetRoleToUserResDto } from '@/internal/user/application/dto/setRole.dto';
 import { UpdateUserProfileReqDto, UpdateUserProfileResDto } from '@/internal/user/application/dto/update.dto';
 import {
   VerifyChangePasswordReqDto,
@@ -42,6 +43,31 @@ export class UserServiceImpl implements UserServiceInterface {
     @Inject('AuthRepository')
     private readonly authRepo: AuthRepositoryInterface,
   ) {}
+  async setRoleToUser(reqData: SetRoleToUserReqDto): Promise<SetRoleToUserResDto> {
+    try {
+      // tìm cái user với cái id đó
+      const userEntity: UserEntity | null = await this.userRepo.getOneByUserKey(reqData.account);
+      if (userEntity == null) {
+        throw new ErrorCustom(HttpStatus.NOT_FOUND, 'User not found, please try again');
+      }
+      // remove all roles of user
+      const isRemoved: number = await this.authRepo.removeAllRolesOfUser(userEntity.id);
+      if (isRemoved === -1) {
+        throw new ErrorCustom(HttpStatus.INTERNAL_SERVER_ERROR, 'Error: remove all roles of user');
+      }
+      const rolesString: string[] = reqData.roleIds.map((roleId) => roleId.toString());
+      const success: number = await this.authRepo.saveRole(userEntity.id, rolesString);
+      if (!success) {
+        throw new ErrorCustom(HttpStatus.INTERNAL_SERVER_ERROR, 'Error: save role');
+      }
+      return new SetRoleToUserResDto(true);
+    } catch (error) {
+      if (error instanceof ErrorCustom) {
+        throw error;
+      }
+      throw new InternalServerError();
+    }
+  }
 
   async updateUserProfile(reqData: UpdateUserProfileReqDto): Promise<UpdateUserProfileResDto> {
     try {

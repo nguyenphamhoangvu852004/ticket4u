@@ -52,7 +52,7 @@ func (service *eventService) GetDeletedList(ctx context.Context, reqData *dto.Ge
 
 	offset := (uint(uintPage) - 1) * limit
 
-	listEntity, err := service.eventsRepo.GetDeleted(ctx, &params.GetEventsParams{PaginateParams: params.PaginateParams{Limit: int8(limit), Offset: int8(offset)}})
+	listEntity, err := service.eventsRepo.GetDeleted(ctx, &params.GetEventsParams{PaginateParams: params.PaginateParams{Limit: int(limit), Offset: int(offset)}})
 
 	if err != nil {
 		return nil, response.NewAPIError(http.StatusInternalServerError, err.Error(), err)
@@ -270,7 +270,7 @@ func (service *eventService) GetEventsList(ctx context.Context, reqData *dto.Get
 	uintSize := uint64(20)
 	offset := (uintPage - 1) * uintSize
 
-	cacheKey := fmt.Sprintf("events-page-%d", uintPage)
+	cacheKey := fmt.Sprintf("events:page:%d:size:%d", uintPage, uintSize)
 
 	// 1. Try Redis
 	cached, err := utils.GetRedis(ctx, cacheKey)
@@ -284,10 +284,13 @@ func (service *eventService) GetEventsList(ctx context.Context, reqData *dto.Get
 	// 2. Query MySQL
 	params := &params.GetEventsParams{
 		PaginateParams: params.PaginateParams{
-			Limit:  int8(uintSize),
-			Offset: int8(offset),
+			Limit:  int(uintSize),
+			Offset: int(offset),
 		},
 	}
+
+	fmt.Println("limit", params.Limit)
+	fmt.Println("offset", params.Offset)
 
 	listEntity, err := service.eventsRepo.Get(ctx, params)
 	if err != nil {

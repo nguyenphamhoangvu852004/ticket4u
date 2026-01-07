@@ -23,4 +23,5 @@ type EventRepository interface {
 	SoftDelete(ctx context.Context, params *params.DeleteEventParams) error
 	Restore(ctx context.Context, params *params.RestoreEventParams) error
 	IsExists(ctx context.Context, id string) (bool, error)
+	Count(ctx context.Context) (int64, error)
 }

@@ -1,0 +1,50 @@
+basePath: /api/v1/2025
+definitions:
+  response.APIResponse:
+    properties:
+      code:
+        type: integer
+      data:
+        description: data return null not show
+      error:
+        description: Error return null not show
+      message:
+        type: string
+    type: object
+host: localhost:8085
+info:
+  contact:
+    email: nguyenphamhoangvu852004@gmail.com
+    name: nguyenphamhoangvu
+    url: https://github.com/nguyenphamhoangvu852004/ticket4u
+  description: API Document for Event Ticket Service
+  termsOfService: https://github.com/nguyenphamhoangvu852004/ticket4u
+  title: API Document for Event Ticket Service
+  version: "1.0"
+paths:
+  /events:
+    get:
+      consumes:
+      - application/json
+      description: Get list events with pagination
+      parameters:
+      - default: "1"
+        description: Page number
+        in: query
+        name: page
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Get list events
+      tags:
+      - Events
+swagger: "2.0"

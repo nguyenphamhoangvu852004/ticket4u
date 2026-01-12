@@ -25,6 +25,8 @@ spring:
           uri: lb://EVENT-TICKET-SERVICE
           predicates:
             - Path=/event-ticket-service/swagger/**
+          filters:
+            - RewritePath=/event-ticket-service/swagger/(?<segment>.*), /swagger/${segment}
         # Application Routes
         - id: event-route
           uri: lb://EVENT-TICKET-SERVICE
@@ -71,8 +73,8 @@ springdoc:
         url: /nestjs-user-auth/swagger/json
       - name: Order Service
         url: /api/v1/2025/order-service/swagger/json
-      # - name: Event Ticket Service
-      #   url: /event-ticket-service/swagger/json
+      - name: Event Ticket Service
+        url: /event-ticket-service/swagger/doc.json
      
 eureka:
   client:

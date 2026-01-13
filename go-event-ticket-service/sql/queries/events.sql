@@ -166,3 +166,6 @@ set
 	deletor_id = ''
 where
 	id = ?;
+
+-- name: Count :one
+select count(*) from events;

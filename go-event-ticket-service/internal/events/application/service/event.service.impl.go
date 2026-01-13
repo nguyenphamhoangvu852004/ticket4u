@@ -122,6 +122,15 @@ func (service *eventService) ModifyEvent(ctx context.Context, reqData *dto.Modif
 }
 
 func (service *eventService) CreateEvent(ctx context.Context, reqData *dto.CreateEventReq) (*dto.CreateEventRes, error) {
+	fmt.Println(reqData)
+	// validate năm tháng ngày
+	for _, et := range reqData.EventTimes {
+		isValidStartTime := utils.IsValidTimeFormatISO8601(et.StartTime)
+		isValidEndTime := utils.IsValidTimeFormatISO8601(et.EndTime)
+		if !isValidStartTime || !isValidEndTime {
+			return nil, response.NewAPIError(http.StatusBadRequest, "invalid time format, must be ISO8601 format", nil)
+		}
+	}
 	eventEntity := &entity.EventEntity{
 		ID:          uuid.NewString(),
 		Title:       reqData.Title,
@@ -319,8 +328,14 @@ func (service *eventService) GetEventsList(ctx context.Context, reqData *dto.Get
 		resDto.List = append(resDto.List, eventDto)
 	}
 
+	totalItems, err := service.eventsRepo.Count(ctx)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(totalItems)
+
 	resDto.Metadata = utils.NewPaginationMeta(
-		len(resDto.List),
+		int(totalItems),
 		int(uintPage),
 		int(uintSize),
 	)

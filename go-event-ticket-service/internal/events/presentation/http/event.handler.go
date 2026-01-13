@@ -1,10 +1,12 @@
 package http
 
 import (
+	"errors"
 	"go-event-ticket-service/internal/events/application/dto"
 	"go-event-ticket-service/internal/events/application/service"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type EventHandler struct {
@@ -40,11 +42,17 @@ func (h *EventHandler) ModifyEventHandler(ctx *gin.Context) (res interface{}, er
 }
 
 func (h *EventHandler) CreateEventHandler(ctx *gin.Context) (res interface{}, err error) {
+
 	var req dto.CreateEventReq
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		return nil, err
 	}
-
+	claims := ctx.MustGet("claims").(jwt.MapClaims)
+	userId, ok := claims["id"].(string)
+	if !ok {
+		return nil, errors.New("user id not found")
+	}
+	req.OrganizerId = userId
 	return h.service.CreateEvent(ctx, &req)
 }
 

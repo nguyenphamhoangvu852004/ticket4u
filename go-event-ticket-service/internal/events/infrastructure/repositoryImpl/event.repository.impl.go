@@ -19,6 +19,15 @@ type eventRepository struct {
 	dbRaw *sql.DB
 }
 
+// Count implements repository.EventRepository.
+func (e *eventRepository) Count(ctx context.Context) (int64, error) {
+	number, err := e.db.Count(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return number, nil
+}
+
 // IsExists implements repository.EventRepository.
 func (e *eventRepository) IsExists(ctx context.Context, id string) (bool, error) {
 	rs, err := e.db.GetEventById(ctx, id)

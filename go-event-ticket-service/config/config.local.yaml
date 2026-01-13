@@ -1,0 +1,52 @@
+server:
+  mode: "dev"
+  port: 8085
+cors:
+  url: "*"
+
+mysql:
+  host: "localhost"
+  port: 3302
+  username: "root"
+  password: "shopdev"
+  dbname: "ticket4u_test"
+  maxIdleConns: 3
+  maxOpenConns: 5
+  connMaxLifeTime: 10
+
+redis:
+  host: "localhost"
+  port: 6302
+  password: ""
+  database: 0
+
+log:
+  logLevel: "debug"
+  fileLogName: "./storage/logs/server.log"
+  maxSize: 500
+  maxBackups: 3
+  maxAge: 7
+  compress: true
+jwt:
+  tokenHourLifeSpan: 1
+  accessSecret: "myaccessecrettoken2025"
+  accessSecretExpiriedTime: "1h"
+
+googleOAuth:
+  clientId: "1033558064366-udr8c0f6ca6ma6hl8dvgg95d9lmsfm3b.apps.googleusercontent.com"
+  clientSecret: "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"
+  authUri: "https://accounts.google.com/o/oauth2/auth"
+  redirectUris: "http://localhost:8085/v1/2025/oauth/google/callback"
+
+kafka:
+  brokers:
+    - "localhost:29092"
+  groupId: "order-service-group"
+  topics:
+    - "order.created"
+    - "order.updated"
+    
+
+eurekaClient:
+  hostname: localhost 
+  port: 8761

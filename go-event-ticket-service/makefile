@@ -1,11 +1,10 @@
 dev:
-	go run ./cmd/server/
+	powershell -Command "$$env:APP_ENV='local'; go run ./cmd/server/main.go"
 
 
 # docker-up:
 # 	cd environment && docker-compose -f docker-compose-dev.yml up -d --build && docker network connect kafka_default go-event-ticket-service 
 #
-
 
 
 docker-up:

@@ -26,7 +26,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get list events with pagination
+      description: Get list events with pagination, pass the JWT bearer token in the
+        header to get the data from the organizer
       parameters:
       - default: "1"
         description: Page number
@@ -44,7 +45,14 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/response.APIResponse'
+      security:
+      - Bearer: []
       summary: Get list events
       tags:
       - Events
+securityDefinitions:
+  Bearer:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

@@ -4,6 +4,11 @@ type GetEventsParams struct {
 	PaginateParams
 }
 
+type GetEventsByOrganizerIdParams struct {
+	GetEventsParams
+	OrganizerId string
+}
+
 type GetEventsByCategoryIdParams struct {
 	PaginateParams
 	CategoryId string

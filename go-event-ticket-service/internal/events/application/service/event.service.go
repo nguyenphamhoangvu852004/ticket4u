@@ -7,6 +7,7 @@ import (
 
 type EventService interface {
 	GetEventsList(ctx context.Context, reqData *dto.GetEventsListReq) (resData *dto.GetEventsListRes, err error)
+	GetEventsListOfOrganizer(ctx context.Context, reqData *dto.GetEventsListOfOrganizerReq) (resData *dto.GetEventsListOfOrganizerRes, err error)
 	GetEventById(ctx context.Context, reqData *dto.GetEventByIDReq) (resData *dto.GetEventByIDRes, err error)
 	CreateEvent(ctx context.Context, reqData *dto.CreateEventReq) (resData *dto.CreateEventRes, err error)
 	ModifyEvent(ctx context.Context, reqData *dto.ModifyEventReq) (resData *dto.ModifyEventRes, err error)

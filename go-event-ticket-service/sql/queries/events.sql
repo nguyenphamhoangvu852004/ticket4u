@@ -169,3 +169,31 @@ where
 
 -- name: Count :one
 select count(*) from events;
+
+-- name: GetEventsByOrganizerId :many
+select
+	e.id,
+	e.title,
+	e.address,
+	e.organizer_id,
+	e.event_category_id,
+	e.creator_id,
+	e.modifier_id,
+	e.deletor_id,
+	e.created_at,
+	e.modified_at,
+	e.deleted_at,
+	ec.title as event_category_title,
+	ec.description as event_category_description
+from
+	events e
+	join event_categories ec on e.event_category_id = ec.id
+where
+	e.deleted_at = 0
+	and e.organizer_id = ?
+order by
+	e.created_at desc
+limit
+	?
+offset
+	?;

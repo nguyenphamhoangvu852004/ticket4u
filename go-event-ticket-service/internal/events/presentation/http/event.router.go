@@ -9,7 +9,7 @@ import (
 
 func RegisterEventRoutes(rg *gin.RouterGroup, handler *EventHandler) {
 	event := rg.Group("/events")
-	event.GET("", response.Wrap(handler.GetListEventHandler))
+	event.GET("", middleware.JWTMiddleware(), response.Wrap(handler.GetListEventHandler))
 	event.GET("/:id", response.Wrap(handler.GetEventHandler))
 	event.GET("/deleted", response.Wrap(handler.GetDeletedEventsHandler))
 	event.POST("", middleware.JWTMiddleware(), response.Wrap(handler.CreateEventHandler))

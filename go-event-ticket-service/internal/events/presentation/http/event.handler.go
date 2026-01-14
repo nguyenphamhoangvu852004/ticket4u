@@ -4,6 +4,8 @@ import (
 	"errors"
 	"go-event-ticket-service/internal/events/application/dto"
 	"go-event-ticket-service/internal/events/application/service"
+	"go-event-ticket-service/pkg/response"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -47,13 +49,17 @@ func (h *EventHandler) CreateEventHandler(ctx *gin.Context) (res interface{}, er
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		return nil, err
 	}
-	claims := ctx.MustGet("claims").(jwt.MapClaims)
-	userId, ok := claims["id"].(string)
-	if !ok {
-		return nil, errors.New("user id not found")
+	vl, exist := ctx.Get("hasToken")
+	if exist && vl == true {
+		claims := ctx.MustGet("claims").(jwt.MapClaims)
+		userId, ok := claims["id"].(string)
+		if !ok {
+			return nil, &response.APIError{StatusCode: http.StatusUnauthorized, Message: "unauthorized", Err: errors.New("unauthorized")}
+		}
+		req.OrganizerId = userId
+		return h.service.CreateEvent(ctx, &req)
 	}
-	req.OrganizerId = userId
-	return h.service.CreateEvent(ctx, &req)
+	return nil, &response.APIError{StatusCode: http.StatusUnauthorized, Message: "unauthorized", Err: errors.New("unauthorized")}
 }
 
 func (h *EventHandler) GetEventHandler(ctx *gin.Context) (res interface{}, err error) {
@@ -72,7 +78,7 @@ func (h *EventHandler) GetEventHandler(ctx *gin.Context) (res interface{}, err e
 
 // Get available events documentation
 // @Summary      Get list events
-// @Description  Get list events with pagination
+// @Description  Get list events with pagination, pass the JWT bearer token in the header to get the data from the organizer
 // @Tags         Events
 // @Accept       json
 // @Produce      json
@@ -80,13 +86,28 @@ func (h *EventHandler) GetEventHandler(ctx *gin.Context) (res interface{}, err e
 // @Success      200  {object}  response.APIResponse
 // @Failure      500  {object}  response.APIResponse
 // @Router       /events [get]
+// @security Bearer
 func (h *EventHandler) GetListEventHandler(ctx *gin.Context) (res interface{}, err error) {
 	page := ctx.DefaultQuery("page", "1")
-	rs, err := h.service.GetEventsList(ctx, &dto.GetEventsListReq{Page: page})
-	if err != nil {
-		return nil, err
+	var rs any
+	var error error
+
+	vl, exist := ctx.Get("hasToken")
+	if exist && vl == true {
+		claims := ctx.MustGet("claims").(jwt.MapClaims)
+		userId, ok := claims["id"].(string)
+		if !ok {
+			return nil, errors.New("user id not found")
+		}
+		rs, error = h.service.GetEventsListOfOrganizer(ctx, &dto.GetEventsListOfOrganizerReq{Page: page, OrganizerId: userId})
 	}
-	return rs, err
+
+	rs, error = h.service.GetEventsList(ctx, &dto.GetEventsListReq{Page: page})
+
+	if error != nil {
+		return nil, error
+	}
+	return rs, error
 }
 
 func NewEventHandler(s *service.EventService) *EventHandler {

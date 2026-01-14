@@ -22,7 +22,12 @@ const docTemplate = `{
     "paths": {
         "/events": {
             "get": {
-                "description": "Get list events with pagination",
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Get list events with pagination, pass the JWT bearer token in the header to get the data from the organizer",
                 "consumes": [
                     "application/json"
                 ],
@@ -76,6 +81,13 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`

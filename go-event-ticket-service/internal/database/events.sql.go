@@ -390,6 +390,94 @@ func (q *Queries) GetEventsByCategoryId(ctx context.Context, arg GetEventsByCate
 	return items, nil
 }
 
+const getEventsByOrganizerId = `-- name: GetEventsByOrganizerId :many
+select
+	e.id,
+	e.title,
+	e.address,
+	e.organizer_id,
+	e.event_category_id,
+	e.creator_id,
+	e.modifier_id,
+	e.deletor_id,
+	e.created_at,
+	e.modified_at,
+	e.deleted_at,
+	ec.title as event_category_title,
+	ec.description as event_category_description
+from
+	events e
+	join event_categories ec on e.event_category_id = ec.id
+where
+	e.deleted_at = 0
+	and e.organizer_id = ?
+order by
+	e.created_at desc
+limit
+	?
+offset
+	?
+`
+
+type GetEventsByOrganizerIdParams struct {
+	OrganizerID string
+	Limit       int32
+	Offset      int32
+}
+
+type GetEventsByOrganizerIdRow struct {
+	ID                       string
+	Title                    string
+	Address                  string
+	OrganizerID              string
+	EventCategoryID          string
+	CreatorID                string
+	ModifierID               string
+	DeletorID                string
+	CreatedAt                int64
+	ModifiedAt               int64
+	DeletedAt                int64
+	EventCategoryTitle       string
+	EventCategoryDescription sql.NullString
+}
+
+func (q *Queries) GetEventsByOrganizerId(ctx context.Context, arg GetEventsByOrganizerIdParams) ([]GetEventsByOrganizerIdRow, error) {
+	rows, err := q.db.QueryContext(ctx, getEventsByOrganizerId, arg.OrganizerID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetEventsByOrganizerIdRow
+	for rows.Next() {
+		var i GetEventsByOrganizerIdRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Address,
+			&i.OrganizerID,
+			&i.EventCategoryID,
+			&i.CreatorID,
+			&i.ModifierID,
+			&i.DeletorID,
+			&i.CreatedAt,
+			&i.ModifiedAt,
+			&i.DeletedAt,
+			&i.EventCategoryTitle,
+			&i.EventCategoryDescription,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const restoreEvent = `-- name: RestoreEvent :exec
 update events
 set

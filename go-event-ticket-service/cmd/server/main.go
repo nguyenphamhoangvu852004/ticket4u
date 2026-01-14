@@ -24,6 +24,10 @@ import (
 // @host      localhost:8085
 // @BasePath  /api/v1/2025
 // @schema     http
+// @securityDefinitions.apikey Bearer
+// @in header
+// @name Authorization
+
 func main() {
 	app := initialize.Run()
 

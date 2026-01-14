@@ -33,6 +33,100 @@ type eventService struct {
 	// eventTimesRepo repositoryEventTimeRepository
 }
 
+// GetEventsListOfOrganizer implements EventService.
+func (service *eventService) GetEventsListOfOrganizer(ctx context.Context, reqData *dto.GetEventsListOfOrganizerReq) (resData *dto.GetEventsListOfOrganizerRes, err error) {
+	organizationId := reqData.OrganizerId
+
+	// parse page
+	uintPage, err := strconv.ParseUint(reqData.Page, 10, 64)
+	if err != nil || uintPage == 0 {
+		uintPage = 1
+	}
+	uintSize := uint64(20)
+	offset := (uintPage - 1) * uintSize
+
+	cacheKey := fmt.Sprintf("events:page:%d:size:%d", uintPage, uintSize)
+
+	// // 1. Try Redis
+	// cached, err := utils.GetRedis(ctx, cacheKey)
+	// if err == nil && cached != "" {
+	// 	var cachedRes dto.GetEventsListRes
+	// 	if err := json.Unmarshal([]byte(cached), &cachedRes); err == nil {
+	// 		return &cachedRes, nil
+	// 	}
+	// }
+
+	// 2. Query MySQL
+	// params := &params.GetEventsParams{
+	// 	PaginateParams: params.PaginateParams{
+	// 		Limit:  int(uintSize),
+	// 		Offset: int(offset),
+	// 	},
+	// }
+
+	params := &params.GetEventsByOrganizerIdParams{
+		GetEventsParams: params.GetEventsParams{
+			PaginateParams: params.PaginateParams{
+				Limit:  int(uintSize),
+				Offset: int(offset),
+			},
+		},
+		OrganizerId: organizationId,
+	}
+
+	fmt.Println("limit", params.Limit)
+	fmt.Println("offset", params.Offset)
+
+	listEntity, err := service.eventsRepo.GetManyByOrganizerId(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+
+	// build DTO
+	var resDto dto.GetEventsListOfOrganizerRes
+	resDto.List = make([]dto.EventOutputDTO, 0, len(listEntity))
+
+	for _, item := range listEntity {
+		eventDto := dto.EventOutputDTO{
+			ID:        item.ID,
+			Title:     item.Title,
+			Address:   item.Address,
+			Organizer: item.OrganizerID,
+			Category: dto.CategoryOutputDTO{
+				ID:          item.EventCategory.ID,
+				Title:       item.EventCategory.Title,
+				Description: item.EventCategory.Description,
+			},
+			CreatedAt:  utils.UNIXtoTime(item.BaseEntity.CreatedAt).String(),
+			ModifiedAt: utils.UNIXtoTime(item.BaseEntity.ModifiedAt).String(),
+		}
+
+		resDto.List = append(resDto.List, eventDto)
+	}
+
+	totalItems, err := service.eventsRepo.Count(ctx)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println(totalItems)
+
+	resDto.Metadata = utils.NewPaginationMeta(
+		int(totalItems),
+		int(uintPage),
+		int(uintSize),
+	)
+
+	// 3. Save to Redis cache
+	serialized, _ := json.Marshal(resDto)
+	err = utils.SaveRedis(ctx, cacheKey, string(serialized), 60*5) // TTL 5 minutes
+	if err != nil {
+		return nil, err
+	}
+
+	return &resDto, nil
+
+}
+
 // RestoreEvent implements EventService.
 func (service *eventService) RestoreEvent(ctx context.Context, reqData *dto.RestoreEventReq) error {
 	if err := service.eventsRepo.Restore(ctx, &params.RestoreEventParams{ID: reqData.ID}); err != nil {

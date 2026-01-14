@@ -19,6 +19,41 @@ type eventRepository struct {
 	dbRaw *sql.DB
 }
 
+// GetManyByOrganizerId implements repository.EventRepository.
+func (e *eventRepository) GetManyByOrganizerId(ctx context.Context, params *params.GetEventsByOrganizerIdParams) ([]entity.EventEntity, error) {
+	rows, err := e.db.GetEventsByOrganizerId(ctx, database.GetEventsByOrganizerIdParams{
+		OrganizerID: params.OrganizerId,
+		Limit:       int32(params.Limit),
+		Offset:      int32(params.Offset),
+	})
+	if err != nil {
+		return nil, err
+	}
+	var items []entity.EventEntity
+	for _, row := range rows {
+		items = append(items, entity.EventEntity{
+			ID:          row.ID,
+			Title:       row.Title,
+			Address:     row.Address,
+			OrganizerID: row.OrganizerID,
+			EventCategory: catetoryEntity.CategoryEntity{
+				ID:          row.EventCategoryID,
+				Title:       row.EventCategoryTitle,
+				Description: row.EventCategoryDescription.String,
+			},
+			BaseEntity: common.BaseEntity{
+				CreatorID:  row.CreatorID,
+				ModifierID: row.ModifierID,
+				DeletorID:  row.DeletorID,
+				CreatedAt:  row.CreatedAt,
+				ModifiedAt: row.ModifiedAt,
+				DeletedAt:  row.DeletedAt,
+			},
+		})
+	}
+	return items, nil
+}
+
 // Count implements repository.EventRepository.
 func (e *eventRepository) Count(ctx context.Context) (int64, error) {
 	number, err := e.db.Count(ctx)

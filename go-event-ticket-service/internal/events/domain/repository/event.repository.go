@@ -10,6 +10,7 @@ type EventRepository interface {
 	// Get
 	GetByCategoryId(ctx context.Context, params *params.GetEventsByCategoryIdParams) ([]entity.EventEntity, error)
 	Get(ctx context.Context, params *params.GetEventsParams) ([]entity.EventEntity, error)
+	GetManyByOrganizerId(ctx context.Context, params *params.GetEventsByOrganizerIdParams) ([]entity.EventEntity, error)
 	GetDeleted(ctx context.Context, params *params.GetEventsParams) ([]entity.EventEntity, error)
 	GetEventByID(ctx context.Context, id string) (*entity.EventEntity, error)
 

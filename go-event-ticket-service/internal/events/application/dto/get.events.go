@@ -48,6 +48,17 @@ type (
 		Metadata common.PaginationRes `json:"metadata"`
 	}
 )
+type (
+	GetEventsListOfOrganizerReq struct {
+		Page        string
+		OrganizerId string
+	}
+
+	GetEventsListOfOrganizerRes struct {
+		List     []EventOutputDTO     `json:"list"`
+		Metadata common.PaginationRes `json:"metadata"`
+	}
+)
 
 type (
 	GetEventByIDReq struct {

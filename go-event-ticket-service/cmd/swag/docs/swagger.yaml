@@ -50,6 +50,52 @@ paths:
       summary: Get list events
       tags:
       - Events
+    post:
+      consumes:
+      - multipart/form-data
+      description: Create a new event with eventTimes as JSON string
+      parameters:
+      - description: Event title
+        in: formData
+        name: title
+        required: true
+        type: string
+      - description: Event address
+        in: formData
+        name: address
+        required: true
+        type: string
+      - description: Category ID
+        in: formData
+        name: categoryId
+        required: true
+        type: string
+      - description: Event times as JSON string
+        in: formData
+        name: eventTimes
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - BearerAuth: []
+      - Bearer: []
+      summary: Create event
+      tags:
+      - Events
 securityDefinitions:
   Bearer:
     in: header

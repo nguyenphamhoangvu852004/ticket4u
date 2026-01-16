@@ -1,6 +1,7 @@
 package http
 
 import (
+	"encoding/json"
 	"errors"
 	"go-event-ticket-service/internal/events/application/dto"
 	"go-event-ticket-service/internal/events/application/service"
@@ -43,12 +44,40 @@ func (h *EventHandler) ModifyEventHandler(ctx *gin.Context) (res interface{}, er
 	return h.service.ModifyEvent(ctx, &req)
 }
 
+// Create new event documentation
+// @Summary      Create event
+// @Description  Create a new event with eventTimes as JSON string
+// @Tags         Events
+// @Accept       multipart/form-data
+// @Produce      json
+// @Security     BearerAuth
+// @Param        title        formData  string  true  "Event title"
+// @Param        address      formData  string  true  "Event address"
+// @Param        categoryId   formData  string  true  "Category ID"
+// @Param        eventTimes   formData  string  true  "Event times as JSON string"
+// @Success      200  {object}  response.APIResponse
+// @Failure      400  {object} response.APIResponse
+// @Failure      401  {object} response.APIResponse
+// @Router       /events [post]
+// @Security Bearer
 func (h *EventHandler) CreateEventHandler(ctx *gin.Context) (res interface{}, err error) {
 
 	var req dto.CreateEventReq
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		return nil, err
+	//req.Image = ctx.Get("imageURL") // đã gắn trừ middleware
+	req.Address = ctx.PostForm("address")
+	req.Title = ctx.PostForm("title")
+	req.CategoryId = ctx.PostForm("categoryId")
+
+	// Lấy eventTimes dạng JSON string
+	eventTimesStr := ctx.PostForm("eventTimes")
+	if eventTimesStr == "" {
+		return nil, &response.APIError{StatusCode: http.StatusBadRequest, Message: "eventTimes is required", Err: errors.New("eventTimes is required")}
 	}
+
+	if err := json.Unmarshal([]byte(eventTimesStr), &req.EventTimes); err != nil {
+		return nil, &response.APIError{StatusCode: http.StatusUnauthorized, Message: "invalid eventTimes", Err: errors.New("invalid eventTimes")}
+	}
+
 	vl, exist := ctx.Get("hasToken")
 	if exist && vl == true {
 		claims := ctx.MustGet("claims").(jwt.MapClaims)

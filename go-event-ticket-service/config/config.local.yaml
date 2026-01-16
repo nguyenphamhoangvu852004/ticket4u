@@ -50,3 +50,9 @@ kafka:
 eurekaClient:
   hostname: localhost 
   port: 8761
+
+cloudinary:
+  cloudName: "dmsnw2qpd"
+  key: "214187186256291"
+  secret: "13ew1sxffolXvVYkaGleJcAd4AY"
+  url: "cloudinary://214187186256291:13ew1sxffolXvVYkaGleJcAd4AY@dmsnw2qpd"

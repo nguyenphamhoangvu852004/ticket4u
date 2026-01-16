@@ -7,12 +7,13 @@ type Config struct {
 	Server Server `mapstructure:"server"`
 	Jwt    Jwt    `mapstructure:"jwt"`
 	Cors   Cors   `mapstructure:"cors"`
-	// Cloudinary Cloudinary `mapstructure:"cloudinary"`
 	// Admin      Admin      `mapstructure:"admin"`
 	GoogleOAuth  GoogleOAuth  `mapstructure:"googleOAuth"`
 	Kafka        Kafka        `mapstructure:"kafka"`
 	EurekaClient EurekaClient `mapstructure:"eurekaClient"`
+	Cloudinary   Cloudinary   `mapstructure:"cloudinary"`
 }
+
 type EurekaClient struct {
 	Hostname string `mapstructure:"hostname"`
 	Port     int    `mapstructure:"port"`
@@ -36,9 +37,10 @@ type Admin struct {
 }
 
 type Cloudinary struct {
-	CloudName string `mapstructure:"cloud_name"`
-	ApiKey    string `mapstructure:"api_key"`
-	ApiSecret string `mapstructure:"api_secret"`
+	CloudName string `mapstructure:"cloudName"`
+	Key       string `mapstructure:"key"`
+	Secret    string `mapstructure:"secret"`
+	URL       string `mapstructure:"url"`
 }
 
 type Cors struct {

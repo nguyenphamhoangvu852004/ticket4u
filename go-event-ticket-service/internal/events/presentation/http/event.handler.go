@@ -63,11 +63,14 @@ func (h *EventHandler) ModifyEventHandler(ctx *gin.Context) (res interface{}, er
 func (h *EventHandler) CreateEventHandler(ctx *gin.Context) (res interface{}, err error) {
 
 	var req dto.CreateEventReq
-	//req.Image = ctx.Get("imageURL") // đã gắn trừ middleware
+	vl, exist := ctx.Get("imageURL") // đã gắn trừ middleware
+	if exist && vl != nil {
+		req.ImageURL = vl.(string)
+	}
 	req.Address = ctx.PostForm("address")
 	req.Title = ctx.PostForm("title")
 	req.CategoryId = ctx.PostForm("categoryId")
-
+	// req.ImageURL = ctx.Get("imageURL")
 	// Lấy eventTimes dạng JSON string
 	eventTimesStr := ctx.PostForm("eventTimes")
 	if eventTimesStr == "" {
@@ -78,7 +81,7 @@ func (h *EventHandler) CreateEventHandler(ctx *gin.Context) (res interface{}, er
 		return nil, &response.APIError{StatusCode: http.StatusUnauthorized, Message: "invalid eventTimes", Err: errors.New("invalid eventTimes")}
 	}
 
-	vl, exist := ctx.Get("hasToken")
+	vl, exist = ctx.Get("hasToken")
 	if exist && vl == true {
 		claims := ctx.MustGet("claims").(jwt.MapClaims)
 		userId, ok := claims["id"].(string)

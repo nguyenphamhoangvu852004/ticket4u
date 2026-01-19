@@ -10,6 +10,7 @@ type EventEntity struct {
 	ID            string
 	Title         string
 	Address       string
+	ImageURL      string
 	OrganizerID   string
 	EventCategory catetoryEntity.CategoryEntity
 	EventTimeIDs  []string
@@ -20,6 +21,7 @@ type EventEntity struct {
 type EventEntityUpdate struct {
 	ID            string
 	Title         *string
+	ImageURL      *string
 	Address       *string
 	OrganizerID   *string
 	EventCategory *catetoryEntity.CategoryEntity

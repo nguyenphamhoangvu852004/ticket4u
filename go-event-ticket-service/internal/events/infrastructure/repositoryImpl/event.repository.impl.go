@@ -35,6 +35,7 @@ func (e *eventRepository) GetManyByOrganizerId(ctx context.Context, params *para
 			ID:          row.ID,
 			Title:       row.Title,
 			Address:     row.Address,
+			ImageURL:    row.ImageUrl.String,
 			OrganizerID: row.OrganizerID,
 			EventCategory: catetoryEntity.CategoryEntity{
 				ID:          row.EventCategoryID,
@@ -88,6 +89,7 @@ func (e *eventRepository) GetDeleted(ctx context.Context, params *params.GetEven
 		items = append(items, entity.EventEntity{
 			ID:          modelEvent.ID,
 			Title:       modelEvent.Title,
+			ImageURL:    modelEvent.ImageUrl.String,
 			Address:     modelEvent.Address,
 			OrganizerID: modelEvent.OrganizerID,
 			EventCategory: catetoryEntity.CategoryEntity{
@@ -122,6 +124,7 @@ func (e *eventRepository) GetByCategoryId(ctx context.Context, params *params.Ge
 		items = append(items, entity.EventEntity{
 			ID:          modelEvent.ID,
 			Title:       modelEvent.Title,
+			ImageURL:    modelEvent.ImageUrl.String,
 			Address:     modelEvent.Address,
 			OrganizerID: modelEvent.OrganizerID,
 			EventCategory: catetoryEntity.CategoryEntity{ID: modelEvent.EventCategoryID,
@@ -165,6 +168,7 @@ func (e *eventRepository) GetEventByID(ctx context.Context, id string) (*entity.
 		ID:          rs.ID,
 		Title:       rs.Title,
 		Address:     rs.Address,
+		ImageURL:    rs.ImageUrl.String,
 		OrganizerID: rs.OrganizerID,
 		EventCategory: catetoryEntity.CategoryEntity{
 			ID:          rs.EventCategoryID,
@@ -206,7 +210,10 @@ func (e *eventRepository) Update(ctx context.Context, entity *entity.EventEntity
 		sets = append(sets, "event_category_id = ?")
 		args = append(args, *&entity.EventCategory.ID)
 	}
-
+	if entity.ImageURL != nil {
+		sets = append(sets, "image_url = ?")
+		args = append(args, *entity.ImageURL)
+	}
 	if len(sets) == 0 {
 		return nil, nil
 	}
@@ -227,6 +234,7 @@ func (e *eventRepository) Save(ctx context.Context, entity *entity.EventEntity) 
 		Title:           entity.Title,
 		Address:         entity.Address,
 		OrganizerID:     entity.OrganizerID,
+		ImageUrl:        sql.NullString{String: entity.ImageURL, Valid: true},
 		EventCategoryID: entity.EventCategory.ID,
 		CreatorID:       entity.BaseEntity.CreatorID,
 		ModifierID:      entity.BaseEntity.ModifierID,
@@ -255,6 +263,7 @@ func (e *eventRepository) Get(ctx context.Context, params *params.GetEventsParam
 		items = append(items, entity.EventEntity{
 			ID:          modelEvent.ID,
 			Title:       modelEvent.Title,
+			ImageURL:    modelEvent.ImageUrl.String,
 			Address:     modelEvent.Address,
 			OrganizerID: modelEvent.OrganizerID,
 			EventCategory: catetoryEntity.CategoryEntity{

@@ -30,6 +30,7 @@ type EventOutputDTO struct {
 	ID         string                `json:"id"`
 	Title      string                `json:"title"`
 	Address    string                `json:"address"`
+	ImageURL   string                `json:"imageUrl"`
 	Organizer  string                `json:"organizer"`
 	Category   CategoryOutputDTO     `json:"category"`
 	EventTimes []*EventTimeOutputDTO `json:"eventTimes,omitempty"`

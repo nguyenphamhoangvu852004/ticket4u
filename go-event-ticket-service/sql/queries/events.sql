@@ -3,6 +3,7 @@ select
 	e.id,
 	e.title,
 	e.address,
+	e.image_url,
 	e.organizer_id,
 	e.event_category_id,
 	e.creator_id,
@@ -29,6 +30,8 @@ select
 	e.id,
 	e.title,
 	e.address,
+
+	e.image_url,
 	e.organizer_id,
 	e.event_category_id,
 	e.creator_id,
@@ -56,6 +59,7 @@ select
 	e.id,
 	e.title,
 	e.address,
+	e.image_url,
 	e.organizer_id,
 	e.event_category_id,
 	e.creator_id,
@@ -83,6 +87,7 @@ select
 	e.id,
 	e.title,
 	e.address,
+	e.image_url,
 	e.organizer_id,
 	e.event_category_id,
 	e.creator_id,
@@ -108,6 +113,7 @@ select
 	e.id,
 	e.title,
 	e.address,
+	e.image_url,
 	e.organizer_id,
 	e.event_category_id,
 	e.created_at,
@@ -127,6 +133,7 @@ insert into
 		id,
 		title,
 		address,
+		image_url,
 		organizer_id,
 		event_category_id,
 		creator_id,
@@ -137,13 +144,14 @@ insert into
 		deleted_at
 	)
 values
-	(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+	(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?);
 
 -- name: UpdateEvents :exec
 UPDATE events
 SET
 	title = COALESCE(sqlc.narg (title), title),
 	address = COALESCE(sqlc.narg (address), address),
+	image_url = COALESCE(sqlc.narg (image_url), image_url),
 	organizer_id = COALESCE(sqlc.narg (organizer_id), organizer_id),
 	modified_at = COALESCE(sqlc.arg (modified_at), modified_at),
 	modifier_id = COALESCE(sqlc.arg (modifier_id), modifier_id)
@@ -175,6 +183,7 @@ select
 	e.id,
 	e.title,
 	e.address,
+	e.image_url,
 	e.organizer_id,
 	e.event_category_id,
 	e.creator_id,

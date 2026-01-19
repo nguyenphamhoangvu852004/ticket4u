@@ -27,6 +27,7 @@ insert into
 		id,
 		title,
 		address,
+		image_url,
 		organizer_id,
 		event_category_id,
 		creator_id,
@@ -37,13 +38,14 @@ insert into
 		deleted_at
 	)
 values
-	(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)
 `
 
 type CreateEventsParams struct {
 	ID              string
 	Title           string
 	Address         string
+	ImageUrl        sql.NullString
 	OrganizerID     string
 	EventCategoryID string
 	CreatorID       string
@@ -59,6 +61,7 @@ func (q *Queries) CreateEvents(ctx context.Context, arg CreateEventsParams) (sql
 		arg.ID,
 		arg.Title,
 		arg.Address,
+		arg.ImageUrl,
 		arg.OrganizerID,
 		arg.EventCategoryID,
 		arg.CreatorID,
@@ -75,6 +78,7 @@ select
 	e.id,
 	e.title,
 	e.address,
+	e.image_url,
 	e.organizer_id,
 	e.event_category_id,
 	e.creator_id,
@@ -107,6 +111,7 @@ type GetDeletedEventsRow struct {
 	ID                       string
 	Title                    string
 	Address                  string
+	ImageUrl                 sql.NullString
 	OrganizerID              string
 	EventCategoryID          string
 	CreatorID                string
@@ -132,6 +137,7 @@ func (q *Queries) GetDeletedEvents(ctx context.Context, arg GetDeletedEventsPara
 			&i.ID,
 			&i.Title,
 			&i.Address,
+			&i.ImageUrl,
 			&i.OrganizerID,
 			&i.EventCategoryID,
 			&i.CreatorID,
@@ -161,6 +167,7 @@ select
 	e.id,
 	e.title,
 	e.address,
+	e.image_url,
 	e.organizer_id,
 	e.event_category_id,
 	e.creator_id,
@@ -185,6 +192,7 @@ type GetEventByIdRow struct {
 	ID                       string
 	Title                    string
 	Address                  string
+	ImageUrl                 sql.NullString
 	OrganizerID              string
 	EventCategoryID          string
 	CreatorID                string
@@ -204,6 +212,7 @@ func (q *Queries) GetEventById(ctx context.Context, id string) (GetEventByIdRow,
 		&i.ID,
 		&i.Title,
 		&i.Address,
+		&i.ImageUrl,
 		&i.OrganizerID,
 		&i.EventCategoryID,
 		&i.CreatorID,
@@ -223,6 +232,8 @@ select
 	e.id,
 	e.title,
 	e.address,
+
+	e.image_url,
 	e.organizer_id,
 	e.event_category_id,
 	e.creator_id,
@@ -255,6 +266,7 @@ type GetEventsRow struct {
 	ID                       string
 	Title                    string
 	Address                  string
+	ImageUrl                 sql.NullString
 	OrganizerID              string
 	EventCategoryID          string
 	CreatorID                string
@@ -280,6 +292,7 @@ func (q *Queries) GetEvents(ctx context.Context, arg GetEventsParams) ([]GetEven
 			&i.ID,
 			&i.Title,
 			&i.Address,
+			&i.ImageUrl,
 			&i.OrganizerID,
 			&i.EventCategoryID,
 			&i.CreatorID,
@@ -309,6 +322,7 @@ select
 	e.id,
 	e.title,
 	e.address,
+	e.image_url,
 	e.organizer_id,
 	e.event_category_id,
 	e.creator_id,
@@ -341,6 +355,7 @@ type GetEventsByCategoryIdRow struct {
 	ID                       string
 	Title                    string
 	Address                  string
+	ImageUrl                 sql.NullString
 	OrganizerID              string
 	EventCategoryID          string
 	CreatorID                string
@@ -366,6 +381,7 @@ func (q *Queries) GetEventsByCategoryId(ctx context.Context, arg GetEventsByCate
 			&i.ID,
 			&i.Title,
 			&i.Address,
+			&i.ImageUrl,
 			&i.OrganizerID,
 			&i.EventCategoryID,
 			&i.CreatorID,
@@ -395,6 +411,7 @@ select
 	e.id,
 	e.title,
 	e.address,
+	e.image_url,
 	e.organizer_id,
 	e.event_category_id,
 	e.creator_id,
@@ -429,6 +446,7 @@ type GetEventsByOrganizerIdRow struct {
 	ID                       string
 	Title                    string
 	Address                  string
+	ImageUrl                 sql.NullString
 	OrganizerID              string
 	EventCategoryID          string
 	CreatorID                string
@@ -454,6 +472,7 @@ func (q *Queries) GetEventsByOrganizerId(ctx context.Context, arg GetEventsByOrg
 			&i.ID,
 			&i.Title,
 			&i.Address,
+			&i.ImageUrl,
 			&i.OrganizerID,
 			&i.EventCategoryID,
 			&i.CreatorID,
@@ -517,6 +536,7 @@ UPDATE events
 SET
 	title = COALESCE(?, title),
 	address = COALESCE(?, address),
+	image_url = COALESCE(?, image_url),
 	organizer_id = COALESCE(?, organizer_id),
 	modified_at = COALESCE(?, modified_at),
 	modifier_id = COALESCE(?, modifier_id)
@@ -528,6 +548,7 @@ WHERE
 type UpdateEventsParams struct {
 	Title       sql.NullString
 	Address     sql.NullString
+	ImageUrl    sql.NullString
 	OrganizerID sql.NullString
 	ModifiedAt  int64
 	ModifierID  string
@@ -538,6 +559,7 @@ func (q *Queries) UpdateEvents(ctx context.Context, arg UpdateEventsParams) erro
 	_, err := q.db.ExecContext(ctx, updateEvents,
 		arg.Title,
 		arg.Address,
+		arg.ImageUrl,
 		arg.OrganizerID,
 		arg.ModifiedAt,
 		arg.ModifierID,

@@ -57,8 +57,6 @@ func (ns NullTicketsStatus) Value() (driver.Value, error) {
 type Event struct {
 	// event primary key
 	ID string
-	// event title
-	Title string
 	// event address
 	Address string
 	// organizer of event
@@ -77,6 +75,10 @@ type Event struct {
 	ModifiedAt int64
 	// delete date of row
 	DeletedAt int64
+	// event title
+	Title string
+	// image url
+	ImageUrl sql.NullString
 }
 
 // Table category of event

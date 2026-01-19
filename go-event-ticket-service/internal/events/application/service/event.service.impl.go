@@ -56,7 +56,7 @@ func (service *eventService) GetEventsListOfOrganizer(ctx context.Context, reqDa
 	// 	}
 	// }
 
-	// 2. Query MySQL
+	// // 2. Query MySQL
 	// params := &params.GetEventsParams{
 	// 	PaginateParams: params.PaginateParams{
 	// 		Limit:  int(uintSize),
@@ -90,6 +90,7 @@ func (service *eventService) GetEventsListOfOrganizer(ctx context.Context, reqDa
 		eventDto := dto.EventOutputDTO{
 			ID:        item.ID,
 			Title:     item.Title,
+			ImageURL:  item.ImageURL,
 			Address:   item.Address,
 			Organizer: item.OrganizerID,
 			Category: dto.CategoryOutputDTO{
@@ -229,6 +230,7 @@ func (service *eventService) CreateEvent(ctx context.Context, reqData *dto.Creat
 		ID:          uuid.NewString(),
 		Title:       reqData.Title,
 		Address:     reqData.Address,
+		ImageURL:    reqData.ImageURL,
 		OrganizerID: reqData.OrganizerId,
 		EventCategory: catetoryEntity.CategoryEntity{
 			ID: reqData.CategoryId,
@@ -313,6 +315,7 @@ func (service *eventService) GetEventById(ctx context.Context, reqData *dto.GetE
 	resDto.Event.ID = eventEntity.ID
 	resDto.Event.Title = eventEntity.Title
 	resDto.Event.Address = eventEntity.Address
+	resDto.Event.ImageURL = eventEntity.ImageURL
 	resDto.Event.Organizer = eventEntity.OrganizerID
 	resDto.Event.CreatedAt = utils.UNIXtoTime(eventEntity.BaseEntity.CreatedAt).String()
 	resDto.Event.ModifiedAt = utils.UNIXtoTime(eventEntity.BaseEntity.ModifiedAt).String()
@@ -408,6 +411,7 @@ func (service *eventService) GetEventsList(ctx context.Context, reqData *dto.Get
 		eventDto := dto.EventOutputDTO{
 			ID:        item.ID,
 			Title:     item.Title,
+			ImageURL:  item.ImageURL,
 			Address:   item.Address,
 			Organizer: item.OrganizerID,
 			Category: dto.CategoryOutputDTO{

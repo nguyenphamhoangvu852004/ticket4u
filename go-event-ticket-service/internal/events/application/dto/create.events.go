@@ -17,6 +17,7 @@ type (
 		Title       string         `json:"title"`
 		Address     string         `json:"address"`
 		OrganizerId string         `json:"organizerId"`
+		ImageURL    string         `json:"imageUrl"`
 		CategoryId  string         `json:"categoryId"`
 		EventTimes  []EventTimeDTO `json:"eventTimes"`
 	}

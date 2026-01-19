@@ -12,6 +12,7 @@ func Run() *gin.Engine {
 	InitMysqlC()
 	InitRedis()
 	InitKafkaV2()
+	InitCloudinaryInstance()
 	app := InitRouter(global.DbQueries, global.Mdbc)
 	InitEurekaClient()
 	return app

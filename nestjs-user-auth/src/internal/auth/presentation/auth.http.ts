@@ -10,7 +10,7 @@ import { ResponseData } from '@/internal/global/ResponseData';
 import { ApiResponseData } from '@/libs/swagger/swagger.utils';
 import { Body, Controller, ExecutionContext, Get, Patch, Post, Req, Res, SetMetadata, UseGuards } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 import {
   GetDeviceIPAdressReqDto,
@@ -93,6 +93,8 @@ export class AuthHttp {
   @SetMetadata('permissions', ['READ'])
   @SetMetadata('actors', ACTORS)
   @SetMetadata('resources', RESOURCES)
+  @Throttle({ device: {} })
+  @SkipThrottle({ registrate: true, verifyOTP: true })
   @Get('/devices')
   async getIPAddress(@Req() req: Request, @Res() res: Response) {
     const responseData: ResponseData<GetDeviceIPAdressResDto> = await this.authHandler.getDeviceIPAddress(

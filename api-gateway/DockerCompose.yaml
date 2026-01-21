@@ -5,4 +5,8 @@ services:
     image: api-gateway
     ports:
       - 8080:8080
-  
+  redis:
+    container_name: redis-api-gateway-container
+    image: redis:8.0
+    ports:
+      - "6301:6379"

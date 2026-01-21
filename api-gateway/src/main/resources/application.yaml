@@ -2,17 +2,31 @@ server:
   forward-headers-strategy: framework
   port: 8080
 
+logging:
+  level:
+    org.springframework.cloud.gateway: TRACE
+    org.springframework.data.redis: DEBUG
+
 spring:
   application:
     name: api-gateway
+  data:
+    redis:
+      host: redis-api-gateway-container 
+      port: 6379 
   cloud:
     gateway:
       discovery:
         locator:
           enabled: false
-
+      default-filters:
+        - name: RequestRateLimiter
+          args:
+            redis-rate-limiter.replenishRate: 1
+            redis-rate-limiter.burstCapacity: 1
+            key-resolver: "#{@ipKeyResolver}"
       routes:
-        # Swagger UI Routes
+        # Swagger UI Routes (Giữ nguyên)
         - id: auth-swagger
           uri: lb://AUTH-USER-SERVICE
           predicates:
@@ -28,10 +42,30 @@ spring:
           filters:
             - RewritePath=/event-ticket-service/swagger/(?<segment>.*), /swagger/${segment}
         # Application Routes
+        # Ví dụ: Route này quan trọng (Auth), cần chặn gắt hơn mặc định
+        - id: auth-route
+          uri: lb://AUTH-USER-SERVICE
+          predicates:
+            - Path=/api/v1/2025/auth/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5   # Chỉ cho 5 login/s
+                redis-rate-limiter.burstCapacity: 10
+                key-resolver: "#{@ipKeyResolver}"
+        # Các route khác sẽ tự động ăn theo "default-filters" ở trên
+        # Không cần paste config vào từng cái nữa -> File gọn hơn hẳn.
         - id: event-route
           uri: lb://EVENT-TICKET-SERVICE
           predicates:
             - Path=/api/v1/2025/events/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 2
+                redis-rate-limiter.burstCapacity: 2
+                # Chú ý: Tên bean phải khớp với tên hàm @Bean ở Bước 2
+                key-resolver: "#{@ipKeyResolver}"
         - id: category-route
           uri: lb://EVENT-TICKET-SERVICE
           predicates:
@@ -44,10 +78,6 @@ spring:
           uri: lb://EVENT-TICKET-SERVICE
           predicates:
             - Path=/api/v1/2025/eventTimes/**
-        - id: auth-route
-          uri: lb://AUTH-USER-SERVICE
-          predicates:
-            - Path=/api/v1/2025/auth/**
         - id: orders-route
           uri: lb://ORDER-SERVICE
           predicates:
@@ -64,7 +94,6 @@ spring:
           uri: lb://AUTH-USER-SERVICE
           predicates:
             - Path=/api/v1/2025/users/**
-
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
@@ -75,10 +104,10 @@ springdoc:
         url: /api/v1/2025/order-service/swagger/json
       - name: Event Ticket Service
         url: /event-ticket-service/swagger/doc.json
-     
 eureka:
   client:
     service-url:
       defaultZone: http://eureka-server:8761/eureka/
     register-with-eureka: true
     fetch-registry: true
+

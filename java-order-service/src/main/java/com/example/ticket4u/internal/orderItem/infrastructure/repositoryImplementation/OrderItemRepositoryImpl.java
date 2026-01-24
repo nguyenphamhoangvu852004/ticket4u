@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Repository;
 
 import com.example.ticket4u.internal.orderItem.domain.entity.OrderItem;
-import com.example.ticket4u.internal.orderItem.domain.repositoryInterface.OrderItemRepositoryInterface;
+import com.example.ticket4u.internal.orderItem.domain.repositoryInterface.IOrderItemRepository;
 import com.example.ticket4u.internal.orderItem.infrastructure.jpa.OrderItemJPARepository;
 import com.example.ticket4u.internal.orderItem.infrastructure.jpa.model.OrderItemModelSchema;
 
@@ -13,11 +13,11 @@ import jakarta.transaction.Transactional;
 
 
 @Repository
-public class OrderItemRepositoryImplementation implements OrderItemRepositoryInterface {
+public class OrderItemRepositoryImpl implements IOrderItemRepository {
 
     private final  OrderItemJPARepository  orderItemJPARepository;
 
-    public OrderItemRepositoryImplementation(OrderItemJPARepository orderItemJPARepository) {
+    public OrderItemRepositoryImpl(OrderItemJPARepository orderItemJPARepository) {
         this.orderItemJPARepository = orderItemJPARepository;
     }
 

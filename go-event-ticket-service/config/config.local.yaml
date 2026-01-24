@@ -56,3 +56,10 @@ cloudinary:
   key: "214187186256291"
   secret: "13ew1sxffolXvVYkaGleJcAd4AY"
   url: "cloudinary://214187186256291:13ew1sxffolXvVYkaGleJcAd4AY@dmsnw2qpd"
+
+elasticsearch:
+  addresses:
+    - "https://localhost:9200"
+  username: "elastic"
+  password: "IliuDl67W=LKdic6XR2o"
+

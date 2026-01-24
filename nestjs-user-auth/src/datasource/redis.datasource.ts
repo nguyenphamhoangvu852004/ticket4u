@@ -1,9 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { logError, logInfo } from '@/libs/winston/logger';
-import * as dotenv from 'dotenv';
 import { createClient, RedisClientType } from 'redis';
-
-dotenv.config({ path: `${__dirname}/../../dev.env` });
 
 export class RedisDatasource {
   private static instance: RedisDatasource;

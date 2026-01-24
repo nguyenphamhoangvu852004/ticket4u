@@ -12,7 +12,7 @@ import com.example.ticket4u.internal.order.application.dto.get.GetOrderByIDResDt
 import com.example.ticket4u.internal.order.application.dto.update.UpdateStatusOrderReqDTO;
 import com.example.ticket4u.internal.order.application.dto.update.UpdateStatusOrderResDTO;
 
-public interface OrderServiceInterface {
+public interface IOrderService {
     public CreateOrderResDTO createOrder(CreateOrderReqDTO createReq);
 
     public GetListOrderResDto getListOrder(GetListOrderReqDto getListOrderReqDto);

@@ -42,6 +42,7 @@ public class GlobalOrderRouter {
         this.orderHandler = orderHandler;
     }
 
+    
 
     @Operation(summary = "Get order by ID")
     @RequireLogin

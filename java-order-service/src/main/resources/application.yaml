@@ -14,6 +14,10 @@ server:
     port: 8086
 
 spring:
+    data:
+        redis:
+            host: order-redis
+            port: 6379
     application:
         name: order-service
     jackson:

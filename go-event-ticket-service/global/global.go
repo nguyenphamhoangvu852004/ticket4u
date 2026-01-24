@@ -7,6 +7,7 @@ import (
 	"go-event-ticket-service/pkg/setting"
 
 	"github.com/cloudinary/cloudinary-go/v2"
+	"github.com/elastic/go-elasticsearch/v9"
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentio/kafka-go"
 	"golang.org/x/oauth2"
@@ -23,4 +24,5 @@ var (
 	KafkaProducer     *kafka.Writer
 	KafkaConsumer     *kafka.Reader
 	CloudinaryClient  *cloudinary.Cloudinary
+	ElasticSearchClient *elasticsearch.Client
 )

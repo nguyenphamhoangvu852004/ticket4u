@@ -13,3 +13,8 @@ func IsValidTimeFormatISO8601(dateString string) bool {
 	}
 	return true
 }
+
+func ConvertISO8601ToUnix(dateString string) int64 {
+	t, _ := time.Parse("2006-01-02", dateString)
+	return t.Unix()
+}

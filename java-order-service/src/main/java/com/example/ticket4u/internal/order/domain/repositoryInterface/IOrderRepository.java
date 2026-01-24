@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.example.ticket4u.internal.order.domain.entity.OrderEntity;
 
-public interface OrderRepositoryInterface  {
+public interface IOrderRepository  {
 
     public OrderEntity getOne(String entityId);
 

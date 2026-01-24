@@ -4,16 +4,16 @@ import org.springframework.stereotype.Component;
 
 import com.example.ticket4u.internal.order.application.dto.get.GetListOrderByUserReqDto;
 import com.example.ticket4u.internal.order.application.dto.get.GetListOrderResDto;
-import com.example.ticket4u.internal.order.application.service.OrderServiceInterface;
+import com.example.ticket4u.internal.order.application.service.IOrderService;
 import com.example.ticket4u.pkg.errorCustom.ErrorCustom;
 import com.example.ticket4u.pkg.response.ApiResponse;
 
 @Component("UserOrderHandlers")
 public class UserOrderHandler {
 
-    private final OrderServiceInterface orderService;
+    private final IOrderService orderService;
 
-    public UserOrderHandler(OrderServiceInterface orderService) {
+    public UserOrderHandler(IOrderService orderService) {
         this.orderService = orderService;
     }
 

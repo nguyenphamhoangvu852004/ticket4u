@@ -12,9 +12,11 @@ import (
 	initalizeCategoryService "go-event-ticket-service/internal/initialize/category"
 	initalizeEventService "go-event-ticket-service/internal/initialize/event"
 	initalizeEventTimeService "go-event-ticket-service/internal/initialize/eventTime"
+	initalizeSearchService "go-event-ticket-service/internal/initialize/search"
 	initalizeTicketService "go-event-ticket-service/internal/initialize/ticket"
 	"go-event-ticket-service/internal/kafka"
 	"go-event-ticket-service/internal/middleware"
+	searchRoutes "go-event-ticket-service/internal/search/presentation/http"
 	ticketRoutes "go-event-ticket-service/internal/tickets/presentation/http"
 
 	"github.com/gin-gonic/gin"
@@ -60,5 +62,8 @@ func InitRouter(db *database.Queries, dbRaw *sql.DB) *gin.Engine {
 	orderEventHandler := kafka.NewOrderEventHandler(ticketService)
 	kafka.NewOrderConsumer(global.KafkaConsumer, *orderEventHandler)
 
+	//Search
+	searchHandler := initalizeSearchService.InitSearchService()
+	searchRoutes.RegisterSearchRoutes(v1, searchHandler)
 	return r
 }

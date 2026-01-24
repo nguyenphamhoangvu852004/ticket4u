@@ -13,15 +13,15 @@ import com.example.ticket4u.internal.order.application.dto.get.GetOrderByIDReqDt
 import com.example.ticket4u.internal.order.application.dto.get.GetOrderByIDResDto;
 import com.example.ticket4u.internal.order.application.dto.update.UpdateStatusOrderReqDTO;
 import com.example.ticket4u.internal.order.application.dto.update.UpdateStatusOrderResDTO;
-import com.example.ticket4u.internal.order.application.service.OrderServiceInterface;
+import com.example.ticket4u.internal.order.application.service.IOrderService;
 import com.example.ticket4u.pkg.errorCustom.ErrorCustom;
 import com.example.ticket4u.pkg.response.ApiResponse;
 
 @Component("GlobalOrderHandlers")
 public class GlobalOrderHandler {
-    private final OrderServiceInterface orderService;
+    private final IOrderService orderService;
 
-    public GlobalOrderHandler(OrderServiceInterface orderService) {
+    public GlobalOrderHandler(IOrderService orderService) {
         this.orderService = orderService;
     }
 

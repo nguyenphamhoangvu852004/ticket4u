@@ -8,10 +8,17 @@ type Config struct {
 	Jwt    Jwt    `mapstructure:"jwt"`
 	Cors   Cors   `mapstructure:"cors"`
 	// Admin      Admin      `mapstructure:"admin"`
-	GoogleOAuth  GoogleOAuth  `mapstructure:"googleOAuth"`
-	Kafka        Kafka        `mapstructure:"kafka"`
-	EurekaClient EurekaClient `mapstructure:"eurekaClient"`
-	Cloudinary   Cloudinary   `mapstructure:"cloudinary"`
+	GoogleOAuth   GoogleOAuth   `mapstructure:"googleOAuth"`
+	Kafka         Kafka         `mapstructure:"kafka"`
+	EurekaClient  EurekaClient  `mapstructure:"eurekaClient"`
+	Cloudinary    Cloudinary    `mapstructure:"cloudinary"`
+	Elasticsearch Elasticsearch `mapstructure:"elasticsearch"`
+}
+
+type Elasticsearch struct {
+	Addresses []string `mapstructure:"addresses"`
+	Username  string   `mapstructure:"username"`
+	Password  string   `mapstructure:"password"`
 }
 
 type EurekaClient struct {

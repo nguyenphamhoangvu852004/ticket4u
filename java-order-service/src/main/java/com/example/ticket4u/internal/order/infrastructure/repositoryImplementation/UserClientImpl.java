@@ -2,11 +2,11 @@ package com.example.ticket4u.internal.order.infrastructure.repositoryImplementat
 
 import org.springframework.stereotype.Repository;
 
-import com.example.ticket4u.internal.order.domain.repositoryInterface.UserClientInterface;
+import com.example.ticket4u.internal.order.domain.repositoryInterface.IUserClient;
 import com.example.ticket4u.internal.order.domain.vo.User;
 
 @Repository
-public class UserClientImplementation implements UserClientInterface {
+public class UserClientImpl implements IUserClient {
     @Override
     public User GetUserByID(String id) {
         return new User(id, "name of user " + id);

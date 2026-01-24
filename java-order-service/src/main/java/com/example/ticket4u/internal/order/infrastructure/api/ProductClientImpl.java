@@ -8,17 +8,17 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import com.example.ticket4u.internal.order.domain.repositoryInterface.ProductClientInterface;
+import com.example.ticket4u.internal.order.domain.repositoryInterface.IProductClient;
 import com.example.ticket4u.internal.order.infrastructure.api.dto.TicketResDto;
 import com.example.ticket4u.pkg.errorCustom.ErrorCustom;
 
 import reactor.core.publisher.Mono;
 
 @Repository
-public class ProductClientImplementation implements ProductClientInterface {
+public class ProductClientImpl implements IProductClient {
     private final WebClient webClient;
 
-    public ProductClientImplementation(
+    public ProductClientImpl(
             WebClient.Builder builder,
             @Value("${app.product-url}") String baseUrl) {
 

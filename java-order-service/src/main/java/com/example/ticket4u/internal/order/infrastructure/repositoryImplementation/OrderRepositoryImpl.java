@@ -11,17 +11,17 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.ticket4u.internal.order.domain.entity.OrderEntity;
-import com.example.ticket4u.internal.order.domain.repositoryInterface.OrderRepositoryInterface;
+import com.example.ticket4u.internal.order.domain.repositoryInterface.IOrderRepository;
 import com.example.ticket4u.internal.order.infrastructure.jpa.OrderJPARepository;
 import com.example.ticket4u.internal.order.infrastructure.jpa.model.OrderModelSchema;
 import com.example.ticket4u.pkg.errorCustom.ErrorCustom;
 
 
 @Repository
-public class OrderRepositoryImplementation implements OrderRepositoryInterface {
+public class OrderRepositoryImpl implements IOrderRepository {
     private OrderJPARepository orderJPARepository;
 
-    public OrderRepositoryImplementation(OrderJPARepository orderJPARepository) {
+    public OrderRepositoryImpl(OrderJPARepository orderJPARepository) {
         this.orderJPARepository = orderJPARepository;
     }
 

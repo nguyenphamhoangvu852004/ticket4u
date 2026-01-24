@@ -13,6 +13,7 @@ func Run() *gin.Engine {
 	InitRedis()
 	InitKafkaV2()
 	InitCloudinaryInstance()
+	InitElasticsearch()
 	app := InitRouter(global.DbQueries, global.Mdbc)
 	InitEurekaClient()
 	return app

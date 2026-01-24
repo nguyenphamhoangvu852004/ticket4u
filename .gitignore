@@ -9,6 +9,13 @@ go-event-ticket-service/data/
 **/mysql_data/
 **/*.sock
 
+
+# env
+go-event-ticket-service\config\config.local.yaml 
+go-event-ticket-service\config\config.docker.yaml 
+nestjs-user-auth\.env.container 
+nestjs-user-auth\.env.dev
+
 *- Copy/
 *- Copy*/
 

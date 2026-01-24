@@ -1,0 +1,66 @@
+server:
+  mode: "dev"
+  port: 8085
+cors:
+  url: "*"
+
+mysql:
+  host: ""
+  port: 3306
+  username: ""
+  password: ""
+  dbname: ""
+  maxIdleConns: 3
+  maxOpenConns: 5
+  connMaxLifeTime: 10
+
+redis:
+  host: ""
+  port: 6379
+  password: ""
+  database: 0
+
+log:
+  logLevel: "debug"
+  fileLogName: "./storage/logs/server.log"
+  maxSize: 500
+  maxBackups: 3
+  maxAge: 7
+  compress: true
+jwt:
+  tokenHourLifeSpan: 1
+  accessSecret: "myaccessecrettoken2025"
+  accessSecretExpiriedTime: "1h"
+
+googleOAuth:
+  clientId: ""
+  clientSecret: ""
+  authUri: ""
+  redirectUris: ""
+
+kafka:
+  brokers:
+    - ""
+  groupId: "order-service-group"
+  topics:
+    - "order.created"
+    - "order.updated"
+
+eurekaClient:
+  hostname: 
+  port: 8761
+
+cloudinary:
+  cloudName: ""
+  key: ""
+  secret: ""
+  url: ""
+
+elasticsearch:
+  addresses:
+    - "https://localhost:9200"
+  username: "elastic"
+  password: ""
+
+
+

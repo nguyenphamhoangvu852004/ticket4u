@@ -1,13 +1,11 @@
 import { DataSource } from 'typeorm';
 import * as mysql from 'mysql2/promise';
-import * as dotenv from 'dotenv';
 import { logError, logInfo } from '@/libs/winston/logger';
 import { permissionsMockData, rolesMockData, rolesPermissionsMockData } from '@/mockData/mockData';
 import { UserModelSchema } from '@/internal/user/infrastructure/model/user.model';
 import { Utils } from '@/utils/utils';
 import { v4 as uuid } from 'uuid';
 import { UserProfileGenderEnum, UserProfilesModelChema } from '@/internal/user/infrastructure/model/userProfiles.model';
-dotenv.config({ path: `${__dirname}/../../dev.env` });
 
 export class MysqlDatasource {
   private static instance: MysqlDatasource;

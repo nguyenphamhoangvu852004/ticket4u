@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"go-event-ticket-service/internal/database"
 	"go-event-ticket-service/internal/tickets/domain/entity"
@@ -43,6 +44,10 @@ func (t *ticketRepository) GetTicketsByID(ctx context.Context, id string) (*enti
 	ticketModel, err := t.db.GetTicketsById(ctx, id)
 	if err != nil {
 		return nil, err
+	}
+
+	if ticketModel.ID == "" {
+		return nil, sql.ErrNoRows
 	}
 
 	ticketEntity := &entity.TicketEntity{

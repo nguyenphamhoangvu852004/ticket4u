@@ -5,4 +5,9 @@ services:
     image: eureka-server
     ports:
       - 8761:8761
-  
+    networks:
+      - microservice-net
+
+networks:
+  microservice-net:
+    external: true

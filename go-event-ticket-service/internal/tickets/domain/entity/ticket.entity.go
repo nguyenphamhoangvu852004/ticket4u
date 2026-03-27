@@ -1,6 +1,9 @@
 package entity
 
-import "go-event-ticket-service/pkg/common"
+import (
+	"fmt"
+	"go-event-ticket-service/pkg/common"
+)
 
 type TicketStatus string
 
@@ -25,6 +28,25 @@ type TicketEntity struct {
 	Created_at    int64
 	Modified_at   int64
 	Deleted_at    int64
+}
+
+func (t *TicketEntity) ToString() string {
+	return fmt.Sprintf(
+		"TicketEntity{ID:%s, Title:%s, Price:%f, Status:%s, TotalQuantity:%d, SoldQuantity:%d, EventTimeID:%s, CreatorID:%s, ModifierID:%s, DeletorID:%s, CreatedAt:%d, ModifiedAt:%d, DeletedAt:%d}",
+		t.ID,
+		t.Title,
+		t.Price,
+		t.Status,
+		t.TotalQuantity,
+		t.SoldQuantity,
+		t.EventTimeID,
+		t.Creator_id,
+		t.Modifier_id,
+		t.Deletor_id,
+		t.Created_at,
+		t.Modified_at,
+		t.Deleted_at,
+	)
 }
 
 // func NewTicketEntity(

@@ -54,6 +54,31 @@ export class UserRepositoryImplementation implements UserRepositoryInterface {
       }),
     ];
   }
+  async getOneByUserId(userId: string): Promise<UserEntity | null> {
+    try {
+      const userBase: UserModelSchema | null = await this.userRepo.findOne({
+        where: {
+          id: userId,
+        },
+      });
+      if (userBase == null) {
+        return null;
+      }
+      const newUserEntity: UserEntity = new UserEntity({
+        id: userBase.id,
+        account: userBase.account,
+        password: userBase.password,
+        salt: userBase.salt,
+        loginTime: userBase.loginTime,
+        logoutTime: userBase.logoutTime,
+        loginIp: userBase.loginIp,
+      });
+      return newUserEntity;
+    } catch (error) {
+      log(error);
+      throw new ErrorCustom(HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.INTERNAL_SERVER_ERROR);
+    }
+  }
   async updateUserProfile(userProfileEntity: UserProfileEntity): Promise<number> {
     try {
       const userProfile: UserProfilesModelChema | null = await this.userProfileRepo.findOne({
@@ -69,6 +94,20 @@ export class UserRepositoryImplementation implements UserRepositoryInterface {
       userProfile.state = userProfileEntity.state;
       userProfile.mobile = userProfileEntity.mobile;
       userProfile.email = userProfileEntity.email;
+      userProfile.birthday = new Date(userProfileEntity.birthday);
+
+      switch (userProfileEntity.gender) {
+        case 'MALE':
+          userProfile.gender = UserProfileGenderEnum.MALE;
+          break;
+        case 'FEMALE':
+          userProfile.gender = UserProfileGenderEnum.FEMALE;
+          break;
+        default:
+          userProfile.gender = UserProfileGenderEnum.OTHER;
+          break;
+      }
+
       userProfile.isAuthenticated = userProfileEntity.isAuthenticated;
 
       const updatedUserProfile: UserProfilesModelChema = await this.userProfileRepo.save(userProfile);
@@ -246,7 +285,7 @@ export class UserRepositoryImplementation implements UserRepositoryInterface {
       throw new ErrorCustom(HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.INTERNAL_SERVER_ERROR);
     }
   }
-  async getOne(account: string): Promise<UserProfileEntity | null> {
+  async getOneUserProfileByAccount(account: string): Promise<UserProfileEntity | null> {
     try {
       const userBase: UserModelSchema | null = await this.userRepo.findOne({
         where: {

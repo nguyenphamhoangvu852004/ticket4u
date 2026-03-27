@@ -20,6 +20,7 @@ func UploadMiddleware() gin.HandlerFunc {
 				"code":    http.StatusBadRequest,
 				"message": err.Error(),
 			})
+			return
 		}
 		file, err := fileHeader.Open()
 		if err != nil {
@@ -27,6 +28,7 @@ func UploadMiddleware() gin.HandlerFunc {
 				"code":    http.StatusBadRequest,
 				"message": err.Error(),
 			})
+			return
 		}
 		defer file.Close()
 
@@ -38,16 +40,10 @@ func UploadMiddleware() gin.HandlerFunc {
 				"code":    http.StatusInternalServerError,
 				"message": err.Error(),
 			})
+			return
 		}
 
 		c.Set("imageURL", resp.URL)
-		fmt.Println("imageURl", resp.URL)
-
-		// c.JSON(http.StatusOK, gin.H{
-		// 	"code":    http.StatusOK,
-		// 	"message": "success",
-		// 	"data":    resp,
-		// })
 
 		c.Next()
 	}

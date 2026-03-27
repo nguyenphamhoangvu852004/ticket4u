@@ -27,6 +27,57 @@ export class AuthRepositoryImplementation implements AuthRepositoryInterface {
     this.userVerifyRepo = MysqlDatasource.getInstance().dataSource.getRepository(UserVerificationsModelSchema);
     this.userRepo = MysqlDatasource.getInstance().dataSource.getRepository(UserModelSchema);
   }
+  async getOneByHashKeyAndOTP(hashKey: string, OTP: string): Promise<UserVerificationsEntity | null> {
+    try {
+      const user: UserVerificationsModelSchema | null = await this.userVerifyRepo.findOne({
+        where: {
+          keyHash: hashKey,
+          otp: OTP,
+        },
+      });
+      if (user == null) {
+        return null;
+      }
+      return new UserVerificationsEntity({
+        id: user.id,
+        otp: user.otp,
+        verificationKey: user.verificationKey,
+        isDeleted: user.isDeleted,
+        isVerified: user.isVerified,
+        keyHash: user.keyHash,
+        type: user.type,
+      });
+    } catch (error) {
+      if (error instanceof ErrorCustom) throw error;
+      const message = error instanceof Error ? error.message : 'Internal server error';
+      throw new ErrorCustom(HttpStatus.INTERNAL_SERVER_ERROR, message);
+    }
+  }
+  async getRolesOfUser(userId: string) {
+    try {
+      const userRoleDatasource = MysqlDatasource.getInstance().dataSource.query(`
+        SELECT role_id, user_id FROM user_roles WHERE user_id = '${userId}'
+      `);
+      log(userRoleDatasource);
+      const roles = await userRoleDatasource;
+      log(`roles thu được tìm thấy cho userId ${userId}:`, roles);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
+      const roleIds = roles.map((role) => role.role_id);
+      log(`role ids thu được tìm thấy cho userId ${userId}:`, roleIds);
+      const rolesEntityFound: any[] = [];
+      for (const roleId of roleIds) {
+        const roleDatasource = MysqlDatasource.getInstance().dataSource.getRepository('roles');
+        const roleEntity = await roleDatasource.find({ where: { id: roleId } });
+        rolesEntityFound.push(...roleEntity);
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return rolesEntityFound.map((role) => role.name);
+    } catch (error: unknown) {
+      if (error instanceof ErrorCustom) throw error;
+      const message = error instanceof Error ? error.message : 'Internal server error';
+      throw new ErrorCustom(HttpStatus.INTERNAL_SERVER_ERROR, message);
+    }
+  }
   async removeAllRolesOfUser(userId: string): Promise<number> {
     try {
       // get all roles from userId
@@ -198,6 +249,8 @@ export class AuthRepositoryImplementation implements AuthRepositoryInterface {
       const user: UserVerificationsModelSchema | null = await this.userVerifyRepo.findOne({
         where: {
           keyHash: object,
+          isVerified: 1,
+          isDeleted: 1,
         },
       });
       if (user == null) {
@@ -251,11 +304,12 @@ export class AuthRepositoryImplementation implements AuthRepositoryInterface {
       throw new ErrorCustom(HttpStatus.INTERNAL_SERVER_ERROR, message);
     }
   }
-  async updateOneVerifySuccessByEmailInVerifyTable(keyHash: string): Promise<number> {
+  async updateOneVerifySuccessByEmailInVerifyTable(keyHash: string, otp: string): Promise<number> {
     try {
       const found: UserVerificationsModelSchema | null = await this.userVerifyRepo.findOne({
         where: {
           keyHash: keyHash,
+          otp: otp,
         },
       });
       if (found == null) {

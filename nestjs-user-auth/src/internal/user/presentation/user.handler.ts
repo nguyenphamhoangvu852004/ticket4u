@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
-import { updatePasswordRegistrateNewAccout } from '@/internal/auth/presentation/validations';
 import {
   ChangePasswordReqDto,
   ChangePasswordResDto,
@@ -34,8 +33,6 @@ export class UserHandler {
 
   async updateUserProfile(reqData: UpdateUserProfileReqDto): Promise<ResponseData<UpdateUserProfileResDto>> {
     try {
-      const data = updatePasswordRegistrateNewAccout.parse(reqData);
-      console.log('🚀 ~ UserHandler ~ updateUserProfile ~ data:', data);
       return ResponseData.success(await this.userService.updateUserProfile(reqData));
     } catch (error) {
       if (error instanceof zod.ZodError) {

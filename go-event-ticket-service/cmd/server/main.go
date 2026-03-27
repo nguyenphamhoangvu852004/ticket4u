@@ -25,6 +25,7 @@ import (
 // @BasePath  /api/v1/2025
 // @schema     http
 // @securityDefinitions.apikey Bearer
+// @type apiKey
 // @in header
 // @name Authorization
 

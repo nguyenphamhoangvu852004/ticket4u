@@ -2,6 +2,8 @@ package response
 
 import "fmt"
 
+// import "fmt"
+
 type APIError struct {
 	StatusCode int
 	Message    string

@@ -16,9 +16,9 @@ type Config struct {
 }
 
 type Elasticsearch struct {
-	Addresses []string `mapstructure:"addresses"`
-	Username  string   `mapstructure:"username"`
-	Password  string   `mapstructure:"password"`
+	Addresses string `mapstructure:"addresses"`
+	Username  string `mapstructure:"username"`
+	Password  string `mapstructure:"password"`
 }
 
 type EurekaClient struct {

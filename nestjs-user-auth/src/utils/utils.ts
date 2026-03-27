@@ -13,11 +13,11 @@ dotenv.config({ path: `${__dirname}/../../dev.env` });
 // }
 
 export class Utils {
-  constructor() {}
+  constructor() { }
   public static createSixRandomDigitalNumber(): number {
     return Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
   }
-  public static generateJWTToken(payload: object, type: 'registrate' | 'login'): string {
+  public static generateJWTToken(payload: object, type: 'registrate' | 'login' | 'refresh'): string {
     switch (type) {
       case 'registrate': {
         const token = jwt.sign(payload, process.env.JWT_REGISTRATE_NEW_USER_SECRET_STRING as string, {
@@ -33,9 +33,17 @@ export class Utils {
         });
         return token;
       }
+      case 'refresh': {
+        const token = jwt.sign(payload, process.env.JWT_REFRESH_SECRET_STRING as string, {
+          expiresIn: Number(process.env.JWT_REFRESH_EXPIRES_IN),
+          algorithm: 'HS256',
+        });
+        return token;
+      }
+
     }
   }
-  public static verifyJWTToken<T extends jwt.JwtPayload>(token: string, type: 'registrate' | 'login'): T {
+  public static verifyJWTToken<T extends jwt.JwtPayload>(token: string, type: 'registrate' | 'login' | 'refresh'): T {
     switch (type) {
       case 'registrate':
         return jwt.verify(token, process.env.JWT_REGISTRATE_NEW_USER_SECRET_STRING as string, {
@@ -44,6 +52,9 @@ export class Utils {
 
       case 'login':
         return jwt.verify(token, process.env.JWT_LOGIN_SECRET_STRING as string, { algorithms: ['HS256'] }) as T;
+
+      case 'refresh':
+        return jwt.verify(token, process.env.JWT_REFRESH_SECRET_STRING as string, { algorithms: ['HS256'] }) as T;
     }
   }
 

@@ -9,11 +9,21 @@ import (
 
 func RegisterEventRoutes(rg *gin.RouterGroup, handler *EventHandler) {
 	event := rg.Group("/events")
-	event.GET("", middleware.JWTMiddleware(), response.Wrap(handler.GetListEventHandler))
+
+	event.GET("",
+		middleware.AuthenticationMiddleware(false),
+		middleware.AuthorizationMiddleware([]string{}),
+		response.Wrap(handler.GetListEventHandler))
+
 	event.GET("/:id", response.Wrap(handler.GetEventHandler))
 	event.GET("/deleted", response.Wrap(handler.GetDeletedEventsHandler))
-	event.POST("", middleware.JWTMiddleware(), middleware.UploadMiddleware(), response.Wrap(handler.CreateEventHandler))
-	// event.POST("", middleware.UploadMiddleware(), response.Wrap(handler.CreateEventHandler))
+
+	event.POST("",
+		middleware.AuthenticationMiddleware(true),
+		middleware.AuthorizationMiddleware([]string{"ADMIN", "ORGANIZER"}),
+		middleware.UploadMiddleware(),
+		response.Wrap(handler.CreateEventHandler))
+
 	event.PATCH("/:id", response.Wrap(handler.ModifyEventHandler))
 	event.DELETE("/:id", response.Wrap(handler.DeleteEventHandler))
 	event.PATCH("/restore/:id", response.Wrap(handler.RestoreEventHandler))

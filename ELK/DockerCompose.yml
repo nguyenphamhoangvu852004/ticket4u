@@ -6,6 +6,14 @@ services:
     container_name: elasticsearch
     ports:
       - "9200:9200"
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "discovery.type=single-node"
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+          cpus: '0.50'
  
 
   kibana:
@@ -13,7 +21,14 @@ services:
     container_name: kibana
     ports:
       - "5601:5601"
+    environment:
+      - "NODE_OPTIONS=--max-old-space-size=1024"
     depends_on:
       - elasticsearch
+    deploy:
+      resources:
+        limits:
+          memory: 2048M
+          cpus: '0.50'
  
 

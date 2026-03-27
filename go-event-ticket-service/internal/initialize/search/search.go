@@ -11,8 +11,8 @@ func InitSearchService() *http.SearchHandler {
 	// Repo
 	repo := repository.NewSearchRepository(global.ElasticSearchClient)
 	//Service
-	sevice := service.NewSearchSerivce(repo)
+	service := service.NewSearchService(repo)
 	//Controller
-	handler := http.NewSearchHandler(sevice)
+	handler := http.NewSearchHandler(service)
 	return handler
 }

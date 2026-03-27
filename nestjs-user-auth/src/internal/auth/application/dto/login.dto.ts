@@ -14,7 +14,10 @@ export class LoginUserReqDto {
 export class LoginUserResDto {
   @ApiProperty()
   token: string;
-  constructor(token: string) {
+
+  refreshToken: string;
+  constructor(token: string, refreshToken: string) {
     this.token = token;
+    this.refreshToken = refreshToken;
   }
 }

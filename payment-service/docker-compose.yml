@@ -1,0 +1,19 @@
+version: "3.9"
+
+networks:
+  microservice-net:
+    external: true
+
+services:
+
+  product:
+    container_name: payment-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      APP_ENV: docker
+    ports:
+      - "8088:8088"
+    networks:
+      - microservice-net

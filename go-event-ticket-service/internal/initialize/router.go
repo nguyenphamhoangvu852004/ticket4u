@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"go-event-ticket-service/global"
 	"go-event-ticket-service/pkg/response"
+	cacher "go-event-ticket-service/utils/cache"
 
 	categoryRoutes "go-event-ticket-service/internal/categories/presentation/http"
 	"go-event-ticket-service/internal/database"
@@ -42,12 +43,14 @@ func InitRouter(db *database.Queries, dbRaw *sql.DB) *gin.Engine {
 	// prefix route
 	v1 := r.Group("/api/v1/2025")
 
+	cacher := cacher.NewCacher(global.Rdb)
+
 	//Category managements
 	categoryHandler := initalizeCategoryService.InitCategoryService(db, dbRaw)
 	categoryRoutes.RegisterCategoryRoutes(v1, categoryHandler)
 
 	//Event managements
-	eventHandler := initalizeEventService.InitEventService(db, dbRaw)
+	eventHandler := initalizeEventService.InitEventService(db, dbRaw, cacher)
 	eventRoutes.RegisterEventRoutes(v1, eventHandler)
 
 	//Event time managements

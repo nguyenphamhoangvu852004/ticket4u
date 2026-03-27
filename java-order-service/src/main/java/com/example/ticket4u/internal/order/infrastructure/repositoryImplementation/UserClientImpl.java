@@ -14,6 +14,7 @@ public class UserClientImpl implements IUserClient {
 
     @Override
     public boolean IsExists(String id) {
+        // call api and cache here to get user infomation
         if (id != "") {
             return true;
         } else {

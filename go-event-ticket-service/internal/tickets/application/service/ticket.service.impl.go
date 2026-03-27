@@ -2,6 +2,9 @@ package service
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
+	"errors"
 	"fmt"
 	evenTimeRepo "go-event-ticket-service/internal/eventTimes/domain/repository"
 	"go-event-ticket-service/internal/tickets/application/dto"
@@ -91,7 +94,6 @@ func (t *ticketService) UpdateSoldAmount(ctx context.Context, reqData *dto.Updat
 	return &dto.UpdateSoldAmountRes{
 		Tickets: reqData.Tickets,
 	}, nil
-
 }
 
 func (t *ticketService) GetAllTickets(ctx context.Context, reqData *dto.GetTicketsListReq) (*dto.GetTicketsListRes, error) {
@@ -202,12 +204,49 @@ func (t *ticketService) DeleteTicket(ctx context.Context, reqData *dto.DeleteTic
 
 // GetTicketByID implements TicketService.
 func (t *ticketService) GetTicketByID(ctx context.Context, ticketId string) (*dto.GetTicketByIDRes, error) {
-	ticketEntity, err := t.ticketRepo.GetTicketsByID(ctx, ticketId)
-	if ticketEntity == nil {
-		return nil, response.NewAPIError(http.StatusNotFound, "ticket not found", nil)
-	}
+	var ticketEntity = &entity.TicketEntity{}
+	var ticketKey string = fmt.Sprintf("ticket:%s", ticketId)
+	// lấy trong cache cái đã
+	ticket, err := utils.GetRedis(ctx, ticketKey)
+
 	if err != nil {
-		return nil, err
+		// nếu lỗi redis thì return luôn
+		return nil, response.NewAPIError(
+			http.StatusInternalServerError,
+			http.StatusText(http.StatusInternalServerError),
+			map[string]string{"error": err.Error()})
+	}
+	// nếu ko có value ticketKey thì call db
+	if ticket == "" {
+		ticketEntity, err = t.ticketRepo.GetTicketsByID(ctx, ticketId)
+
+		if err != nil || ticketEntity == nil || ticketEntity.ID == "" {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, response.NewAPIError(
+					http.StatusNotFound,
+					"Ticket not found",
+					map[string]string{"ticketId": sql.ErrNoRows.Error()})
+			}
+			return nil, err
+		}
+
+		// lưu vô redis
+		data, _ := json.Marshal(ticketEntity)
+		if err := utils.SaveRedis(ctx, ticketKey, string(data), 300); err != nil {
+			return nil, response.NewAPIError(
+				http.StatusNotFound,
+				fmt.Sprintf("Save key %s err", ticketKey),
+				map[string]string{"redis": err.Error()})
+		}
+	} else {
+		// nếu có value thì phải lấy trong cache
+		if err := json.Unmarshal([]byte(ticket), ticketEntity); err != nil {
+			return nil, response.NewAPIError(
+				http.StatusNotFound,
+				fmt.Sprintf("error while unmarshal data"),
+				map[string]string{"error": err.Error()})
+		}
+
 	}
 
 	return &dto.GetTicketByIDRes{

@@ -11,9 +11,11 @@ import { logInfo } from '@/libs/winston/logger';
 import { RequestLoggingInterceptor } from '@/internal/intercepters/RequestLoggingInterceptor';
 import { GlobalExceptionFilter } from '@/internal/intercepters/GlobalExeptionFilter';
 import SwaggerConfig from '@/libs/swagger/swagger.config';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.use(cookieParser());
   app.setGlobalPrefix('api/v1/2025');
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors({

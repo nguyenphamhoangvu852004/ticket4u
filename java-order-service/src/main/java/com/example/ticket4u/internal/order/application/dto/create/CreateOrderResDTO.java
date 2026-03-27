@@ -11,4 +11,5 @@ import lombok.Setter;
 @NoArgsConstructor
 public class CreateOrderResDTO {
     private String orderId;
+    private String paymentURL;
 }

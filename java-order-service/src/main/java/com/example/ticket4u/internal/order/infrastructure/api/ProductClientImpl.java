@@ -1,15 +1,12 @@
 package com.example.ticket4u.internal.order.infrastructure.api;
 
-import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import com.example.ticket4u.internal.order.domain.repositoryInterface.IProductClient;
-import com.example.ticket4u.internal.order.infrastructure.api.dto.TicketResDto;
+import com.example.ticket4u.internal.order.infrastructure.api.dto.TicketResponseData;
 import com.example.ticket4u.pkg.errorCustom.ErrorCustom;
 
 import reactor.core.publisher.Mono;
@@ -25,7 +22,6 @@ public class ProductClientImpl implements IProductClient {
         this.webClient = builder
                 .baseUrl(baseUrl + "/tickets")
                 .build();
-        System.out.println("baseUrl: " + baseUrl);
     }
 
     // @Override
@@ -50,8 +46,10 @@ public class ProductClientImpl implements IProductClient {
     // }
 
     @Override
-    public TicketResDto getTicketById(String ticketId) {
-        TicketResDto resDto = webClient.get()
+    public TicketResponseData getTicketById(String ticketId) {
+
+        // all api to get the ticket and cache here 
+        TicketResponseData resDto = webClient.get()
             .uri("/" + ticketId)
             .retrieve()
             .onStatus(status -> status.is4xxClientError(), resp ->
@@ -62,7 +60,7 @@ public class ProductClientImpl implements IProductClient {
                 resp.bodyToMono(String.class)
                     .flatMap(body -> Mono.<ErrorCustom>error(new ErrorCustom(500, "Product service internal error")))
             )
-            .bodyToMono(TicketResDto.class)
+            .bodyToMono(TicketResponseData.class)
             .block();
 
         if (resDto == null || resDto.getData() == null) {

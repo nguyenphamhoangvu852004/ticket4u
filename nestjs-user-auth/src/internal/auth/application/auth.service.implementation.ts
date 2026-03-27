@@ -36,7 +36,9 @@ export class AuthServiceImplementation implements AuthServiceInterface {
   constructor(
     @Inject('AuthRepository') private readonly authRepo: AuthRepositoryInterface,
     @Inject('UserRepository') private readonly userRepo: UserRepositoryInterface,
-  ) {}
+  ) { }
+
+
   getDeviceIPAddress(reqData: GetDeviceIPAdressReqDto): Promise<GetDeviceIPAdressResDto> {
     try {
       return Promise.resolve(new GetDeviceIPAdressResDto());
@@ -114,6 +116,14 @@ export class AuthServiceImplementation implements AuthServiceInterface {
         'login',
       );
 
+      const refreshToken = Utils.generateJWTToken(
+        {
+          id: userBaseEntity.id,
+          email: userBaseEntity.account,
+        },
+        'refresh',
+      );
+
       // cập nhật lại trạng thái của row trong bảng verification
       userBaseEntity.loginTime = Date.now();
       userBaseEntity.loginIp = 'localhost';
@@ -122,7 +132,7 @@ export class AuthServiceImplementation implements AuthServiceInterface {
         throw new DatabaseError('Error: update user login info');
       }
 
-      return new LoginUserResDto(token);
+      return new LoginUserResDto(token, refreshToken);
     } catch (error) {
       if (error instanceof ErrorCustom) {
         throw error;
@@ -169,12 +179,9 @@ export class AuthServiceImplementation implements AuthServiceInterface {
         isAuthenticated: 0,
       });
       newUserProfile.markCreated('system');
-
-      const isDone: number = await this.userRepo.saveNewUserProfile(newUserProfile);
-      if (isDone != 1) {
-        throw new DatabaseError('Error: save new user profile');
+      if ((await this.userRepo.saveNewUserProfile(newUserProfile)) !== 1) {
+        throw new DatabaseError('Error: save user profile');
       }
-
       return new UpdateRegistrateUserResDto('Update password successfully.', true);
     } catch (error) {
       if (error instanceof ErrorCustom) {
@@ -195,7 +202,7 @@ export class AuthServiceImplementation implements AuthServiceInterface {
 
       // nếu mà ko có thì phải gọi trong database để móc cái otp đã được gửi đi
       if (otpInSystem == null) {
-        userInVerifyTable = await this.authRepo.getOneByHashKey(userKey);
+        userInVerifyTable = await this.authRepo.getOneByHashKeyAndOTP(userKey, reqData.otp);
         if (userInVerifyTable == null) {
           return new VerifyRegistrateUserResDto(reqData.verifyKey, 'Email not found, please try again.', '');
         }
@@ -227,7 +234,7 @@ export class AuthServiceImplementation implements AuthServiceInterface {
         }),
       );
       // cập nhật lại trạng thái của row trong bảng verification
-      if ((await this.authRepo.updateOneVerifySuccessByEmailInVerifyTable(userKey)) != 1) {
+      if ((await this.authRepo.updateOneVerifySuccessByEmailInVerifyTable(userKey, reqData.otp)) != 1) {
         throw new DatabaseError('Error: update one by email in verify table');
       }
 
@@ -237,7 +244,7 @@ export class AuthServiceImplementation implements AuthServiceInterface {
       }
 
       // tạo role , lưu role
-      if ((await this.authRepo.saveRole(newUUIDUser, ['1'])) != 1) {
+      if ((await this.authRepo.saveRole(newUUIDUser, ['2'])) != 1) {
         throw new DatabaseError('Error: save user roles');
       }
       // return
@@ -273,7 +280,7 @@ export class AuthServiceImplementation implements AuthServiceInterface {
 
       if (reqData.purpose == 'dev') {
         sixDigitalRandomNumber = 123456;
-        await Utils.setRedisData(userKey, `${sixDigitalRandomNumber}`, 300);
+        await Utils.setRedisData(userKey, `${sixDigitalRandomNumber}`, 60 * 5);
         return new RegistrateResDto(reqData.verifyKey, 'Send OTP successfully in dev mode');
       } else {
         sixDigitalRandomNumber = Utils.createSixRandomDigitalNumber();
@@ -328,6 +335,50 @@ export class AuthServiceImplementation implements AuthServiceInterface {
         throw error;
       }
       throw new InternalServerError();
+    }
+  }
+
+  async refresh(refreshToken: string): Promise<LoginUserResDto> {
+    try {
+      const payload = Utils.verifyJWTToken<{ id: string; email: string }>(refreshToken, 'refresh');
+      if (!payload) {
+        throw new ErrorCustom(HttpStatus.UNAUTHORIZED, 'Invalid refresh token');
+      }
+
+      const userBaseEntity: UserEntity | null = await this.authRepo.getOneByUserId(payload.id);
+      if (userBaseEntity == null) {
+        throw new ErrorCustom(HttpStatus.NOT_FOUND, 'User not found');
+      }
+
+      // create new tokens
+      const token = Utils.generateJWTToken(
+        {
+          id: userBaseEntity.id,
+          email: userBaseEntity.account,
+        },
+        'login',
+      );
+
+      const newRefreshToken = Utils.generateJWTToken(
+        {
+          id: userBaseEntity.id,
+          email: userBaseEntity.account,
+        },
+        'refresh',
+      );
+
+      // cập nhật lại login info
+      userBaseEntity.loginTime = Date.now();
+      if ((await this.authRepo.updateLoginInfoInUsersTable(userBaseEntity)) != 1) {
+        throw new DatabaseError('Error: update user login info');
+      }
+
+      return new LoginUserResDto(token, newRefreshToken);
+    } catch (error) {
+      if (error instanceof ErrorCustom) {
+        throw error;
+      }
+      throw new ErrorCustom(HttpStatus.UNAUTHORIZED, 'Invalid or expired refresh token');
     }
   }
 }

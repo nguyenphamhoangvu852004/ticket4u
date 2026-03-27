@@ -17,8 +17,8 @@ public class OrderResDto {
     private String orderId;
     private String userId;
     private String status;
+    private String totalPrice;
     private String createdAt;
     private String modifiedAt;
-    
 
 }

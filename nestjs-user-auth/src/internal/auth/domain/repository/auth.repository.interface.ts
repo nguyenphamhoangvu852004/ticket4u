@@ -7,14 +7,16 @@ export interface AuthRepositoryInterface {
   getOneByUserId(userId: string): Promise<UserEntity | null>;
   getOneByEmailInVerifyTable(email: string): Promise<UserVerificationsEntity | null>;
   getOneByHashKey(hashKey: string): Promise<UserVerificationsEntity | null>;
+  getOneByHashKeyAndOTP(hashKey: string, OTP: string): Promise<UserVerificationsEntity | null>;
   getOneByEmail(email: string): Promise<UserEntity | null>;
   saveOtp(object: UserVerificationsEntity): Promise<number>;
   saveOneUserInUsersTable(object: UserEntity): Promise<number>;
-  updateOneVerifySuccessByEmailInVerifyTable(keyHash: string): Promise<number>;
+  updateOneVerifySuccessByEmailInVerifyTable(keyHash: string, otp: string): Promise<number>;
   getInfoOTP(object: string): Promise<UserVerificationsEntity | null>;
   updatePasswordInUsersTable(userKey: string, newPassword: string): Promise<number>;
   updateLoginInfoInUsersTable(user: UserEntity): Promise<number>;
   saveRole(userId: string, roles: string[]): Promise<number>;
   getRoles(): Promise<RoleEntity[]>;
+  getRolesOfUser(userId: string): Promise<string[]>;
   removeAllRolesOfUser(userId: string): Promise<number>;
 }

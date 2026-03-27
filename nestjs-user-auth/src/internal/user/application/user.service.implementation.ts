@@ -76,7 +76,9 @@ export class UserServiceImpl implements UserServiceInterface {
         throw new ErrorCustom(404, 'User not found, please try again');
       }
 
-      const userProfileEntity: UserProfileEntity | null = await this.userRepo.getOne(userEntity.account);
+      const userProfileEntity: UserProfileEntity | null = await this.userRepo.getOneUserProfileByAccount(
+        userEntity.account,
+      );
       if (!userProfileEntity) {
         throw new ErrorCustom(404, 'User not found, please try again');
       }
@@ -120,7 +122,12 @@ export class UserServiceImpl implements UserServiceInterface {
       userVerification.modifierId = 'system';
       userVerification.deletedAt = Date.now();
       userVerification.deletorId = 'system';
-      if (!(await this.authRepo.updateOneVerifySuccessByEmailInVerifyTable(userVerification.keyHash))) {
+      if (
+        !(await this.authRepo.updateOneVerifySuccessByEmailInVerifyTable(
+          userVerification.keyHash,
+          userVerification.otp,
+        ))
+      ) {
         throw new ErrorCustom(HttpStatus.INTERNAL_SERVER_ERROR, 'Error: update one by email in verify table');
       }
 
@@ -162,12 +169,12 @@ export class UserServiceImpl implements UserServiceInterface {
 
       // generrate 1 cai token cho client
 
-      // xoá trong redis va cap nha trong database
+      // xoá trong redis va capa nha trong database
       if ((await Utils.deleteRedisData(userKey)) != 1) {
         throw new DatabaseError('Error: delete redis data');
       }
 
-      if ((await this.authRepo.updateOneVerifySuccessByEmailInVerifyTable(userKey)) != 1) {
+      if ((await this.authRepo.updateOneVerifySuccessByEmailInVerifyTable(userKey, reqData.otp)) != 1) {
         throw new DatabaseError('Error: update one by email in verify table');
       }
 
@@ -346,33 +353,40 @@ export class UserServiceImpl implements UserServiceInterface {
   async getUserInfo(reqDto: GetUserInfoReqDto): Promise<GetUserInfoResDto> {
     try {
       const { userId } = reqDto;
-      const user: UserProfileEntity | null = await this.userRepo.getOne(userId);
-      if (user == null) {
+      const userEntity: UserEntity | null = await this.userRepo.getOneByUserId(userId);
+      if (userEntity == null) {
         throw new ErrorCustom(HttpStatus.NOT_FOUND, HttpMessage.NOT_FOUND);
       }
-      console.log('🚀 ~ UserServiceImpl ~ getUserInfo ~ user:', user);
+
+      const userProfile: UserProfileEntity | null = await this.userRepo.getOneUserProfileByAccount(userEntity.account);
+      if (userProfile == null) {
+        throw new ErrorCustom(HttpStatus.NOT_FOUND, HttpMessage.NOT_FOUND);
+      }
+
+      const userRoles: string[] = await this.authRepo.getRolesOfUser(userEntity.id);
 
       const profileResDto: ProfileResDto = new ProfileResDto(
-        user.account,
-        user.nickname,
-        user.avatar,
-        user.state,
-        user.mobile,
-        user.gender,
-        user.birthday,
-        user.email,
-
-        Utils.formatUnixMillis(user.createdAt),
-        Utils.formatUnixMillis(user.modifiedAt),
+        userProfile.account,
+        userProfile.nickname,
+        userProfile.avatar,
+        userProfile.state,
+        userProfile.mobile,
+        userProfile.gender,
+        userProfile.birthday,
+        userProfile.email,
+        Utils.formatUnixMillis(userProfile.createdAt),
+        Utils.formatUnixMillis(userProfile.modifiedAt),
       );
       return new GetUserInfoResDto(
-        user.id,
-        user.account,
+        userProfile.id,
+        userProfile.account,
         0,
         '',
-        Utils.formatUnixMillis(user.createdAt),
-        Utils.formatUnixMillis(user.modifiedAt),
+        Utils.formatUnixMillis(userProfile.createdAt),
+        Utils.formatUnixMillis(userProfile.modifiedAt),
         profileResDto,
+        userRoles,
+        [],
       );
     } catch (error) {
       if (error instanceof ErrorCustom) {
@@ -410,8 +424,8 @@ export class UserServiceImpl implements UserServiceInterface {
   async isExistUser(reqDto: CheckExistUserReqDto): Promise<CheckExistUserReqDto> {
     try {
       if (
-        (await this.userRepo.getOne(reqDto.getUserId())) === null ||
-        (await this.userRepo.getOne(reqDto.getUserId())) === undefined
+        (await this.userRepo.getOneUserProfileByAccount(reqDto.getUserId())) === null ||
+        (await this.userRepo.getOneUserProfileByAccount(reqDto.getUserId())) === undefined
       ) {
         throw new ErrorCustom(HttpStatus.NOT_FOUND, HttpMessage.NOT_FOUND);
       }

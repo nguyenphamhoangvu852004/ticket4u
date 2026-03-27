@@ -23,7 +23,7 @@ import { ACTORS, RESOURCES } from '@/internal/global/Metadata';
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthHttp {
-  constructor(private readonly authHandler: AuthHandler) {}
+  constructor(private readonly authHandler: AuthHandler) { }
 
   @ApiOperation({ summary: 'Register new user' })
   @ApiBody({ type: RegistrateReqDto })
@@ -75,7 +75,11 @@ export class AuthHttp {
   @Post('/login')
   async loginUser(@Req() req: Request, @Res() res: Response, @Body() reqData: LoginUserReqDto) {
     const responseData: ResponseData<LoginUserResDto> = await this.authHandler.login(reqData);
-    res.status(responseData.code).json(responseData);
+    res.status(responseData.code).cookie('refreshToken', (responseData.data as LoginUserResDto).refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+    }).json(responseData);
     return;
   }
 
@@ -102,5 +106,38 @@ export class AuthHttp {
     );
     res.status(responseData.code).json(responseData);
     return;
+  }
+
+  @ApiOperation({ summary: 'Refresh access token' })
+  @ApiResponseData(LoginUserResDto)
+  @Post('/refresh')
+  async refreshToken(@Req() req: Request, @Res() res: Response) {
+    const refreshToken = req.cookies?.refreshToken;
+
+    if (!refreshToken) {
+      return res.status(401).json({
+        code: 401,
+        message: 'Refresh token missing',
+      });
+    }
+
+    const responseData = await this.authHandler.refresh(refreshToken);
+
+    if (responseData.code !== 200) {
+      return res.status(responseData.code).json(responseData);
+    }
+
+    // Set new refresh token in cookie and send access token in body
+    res.status(responseData.code).cookie('refreshToken', (responseData.data as LoginUserResDto).refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+    }).json({
+      code: 200,
+      message: 'Token refreshed successfully',
+      data: {
+        token: (responseData.data as LoginUserResDto).token
+      }
+    });
   }
 }

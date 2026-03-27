@@ -25,4 +25,5 @@ type EventRepository interface {
 	Restore(ctx context.Context, params *params.RestoreEventParams) error
 	IsExists(ctx context.Context, id string) (bool, error)
 	Count(ctx context.Context) (int64, error)
+	CountByOrganizerId(ctx context.Context, organizerId string) (int64, error)
 }

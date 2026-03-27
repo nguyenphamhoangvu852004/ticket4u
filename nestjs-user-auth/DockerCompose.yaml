@@ -11,6 +11,8 @@ services:
     depends_on:
       - mysql
       - redis
+    networks:
+      - microservice-net
   mysql:
     image: mysql:8.0
     container_name: user-auth-mysql
@@ -18,8 +20,16 @@ services:
       MYSQL_ROOT_PASSWORD: shopdev
     ports:
       - 3303:3306
+    networks:
+      - microservice-net
   redis:
     image: redis:8.0
     container_name: users-auth-redis
     ports:
       - 6303:6379
+    networks:
+      - microservice-net
+
+networks:
+  microservice-net:
+    external: true

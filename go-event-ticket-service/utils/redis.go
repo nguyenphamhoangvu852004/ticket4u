@@ -6,6 +6,7 @@ import (
 	"go-event-ticket-service/global"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
 
@@ -27,6 +28,9 @@ func GetRedis(ctx context.Context, key string) (string, error) {
 	result, err := global.Rdb.Get(ctx, key).Result()
 	if err != nil {
 		CallLogger(ErrorLevel, "Redis Get Error", err, zap.String("key", key))
+		if err == redis.Nil {
+			return "", nil
+		}
 		return "", err
 	}
 	return result, nil

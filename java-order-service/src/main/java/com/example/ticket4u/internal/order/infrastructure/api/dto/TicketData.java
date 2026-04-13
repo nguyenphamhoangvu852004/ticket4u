@@ -14,5 +14,3 @@ public class TicketData {
     private String createdAt;
     private String updatedAt;
 }
-
-

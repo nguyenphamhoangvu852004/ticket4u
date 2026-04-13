@@ -7,6 +7,7 @@ import (
 
 type TicketService interface {
 	GetTicketByID(ctx context.Context, ticketId string) (*dto.GetTicketByIDRes, error)
+	GetTicketsByIds(ctx context.Context, ids []string) ([]*dto.GetTicketByIDRes, error)
 	DeleteTicket(ctx context.Context, reqData *dto.DeleteTicketReq) (*dto.DeleteTicketRes, error)
 	CreateTicket(ctx context.Context, reqData *dto.CreateTicketReq) (*dto.CreateTicketRes, error)
 	GetAllTickets(ctx context.Context, reqData *dto.GetTicketsListReq) (*dto.GetTicketsListRes, error)

@@ -1,5 +1,6 @@
 package com.example.ticket4u.internal.orderItem.infrastructure.repositoryImplementation;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Repository;
@@ -41,11 +42,33 @@ public class OrderItemRepositoryImpl implements IOrderItemRepository {
     }
 
 
-    @Transactional
     @Override
     public List<OrderItem> GetManyByOrderID(String orderID) {
         List<OrderItemModelSchema> list = this.orderItemJPARepository.getOrderItemsByOrderId(orderID);
             return list.stream().map(OrderItemModelSchema::toEntity).toList();
+    }
+
+
+    @Override
+    public List<OrderItem> CreateMultiOrderItem(List<OrderItem> orderItem) {
+        List<OrderItemModelSchema> listModelSchema = new ArrayList<>();
+        for (OrderItem item : orderItem) {
+            listModelSchema.add(new OrderItemModelSchema().builder()
+            .id(item.getUuid())
+            .ticketId(item.getTicketUuid())
+            .orderId(item.getOrderUuid())
+            .quantity(item.getQuantity())
+            .createdAt(item.getCreatedAt())
+            .modifiedAt(item.getModifiedAt())
+            .deletedAt(item.getDeletedAt())
+            .creatorId(item.getCreatorId())
+            .modifierId(item.getModifierId())
+            .deletorId(item.getDeletorId())
+            .build());
+        }
+
+        List<OrderItemModelSchema> list = this.orderItemJPARepository.saveAll(listModelSchema);
+        return list.stream().map(OrderItemModelSchema::toEntity).toList();
     }
 
    

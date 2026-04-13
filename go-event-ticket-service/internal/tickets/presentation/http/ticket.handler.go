@@ -3,6 +3,7 @@ package http
 import (
 	"go-event-ticket-service/internal/tickets/application/dto"
 	"go-event-ticket-service/internal/tickets/application/service"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -43,7 +44,15 @@ func (h *TicketHandler) CreateTicketHandler(ctx *gin.Context) (res interface{}, 
 func (h *TicketHandler) GetAllTicketsHandler(ctx *gin.Context) (res interface{}, err error) {
 	var page string
 	page = ctx.Query("page")
-	return h.service.GetAllTickets(ctx, &dto.GetTicketsListReq{Page: page})
+
+	var idsStrings = ctx.Query("ids")
+	var ids []string
+	if idsStrings == "" {
+		return h.service.GetAllTickets(ctx, &dto.GetTicketsListReq{Page: page})
+	}else{
+		ids = strings.Split(idsStrings,",")
+		return h.service.GetTicketsByIds(ctx, ids)
+	}
 }
 
 // @Summary Get tickets by event time ID

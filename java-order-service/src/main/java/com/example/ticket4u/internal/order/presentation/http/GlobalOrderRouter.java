@@ -21,6 +21,8 @@ import jakarta.servlet.annotation.HttpConstraint;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
+import java.util.UUID;
+
 import org.hibernate.annotations.Filter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -42,13 +44,11 @@ public class GlobalOrderRouter {
         this.orderHandler = orderHandler;
     }
 
-    
-
     @Operation(summary = "Get order by ID")
     @RequireLogin
     @GetMapping("/{orderId}")
     public ResponseEntity<ApiResponse<GetOrderByIDResDto>> getOrderByID(
-    @PathVariable("orderId") String param) {
+            @PathVariable("orderId") String param) {
         ApiResponse<GetOrderByIDResDto> response = orderHandler.getOrderByIDHandler(new GetOrderByIDReqDto(param));
         return ResponseEntity.status(response.getCode()).body(response);
     }
@@ -56,11 +56,21 @@ public class GlobalOrderRouter {
     @Operation(summary = "Create new order")
     @RequireLogin
     @PostMapping("")
-    public ResponseEntity<ApiResponse<CreateOrderResDTO>> createOrder(HttpServletRequest httpRequest,@RequestBody CreateOrderReqDTO body) {
-        @Valid CreateOrderReqDTO reqDto = new CreateOrderReqDTO();
+    public ResponseEntity<ApiResponse<CreateOrderResDTO>> createOrder(HttpServletRequest httpRequest,
+            @RequestBody CreateOrderReqDTO body) {
+        @Valid
+        CreateOrderReqDTO reqDto = new CreateOrderReqDTO();
         UserLoginJWTPayload payload = (UserLoginJWTPayload) httpRequest.getAttribute("userPayloadJWTDecoded");
-        reqDto.setUserId(payload.getId());
-        reqDto.setOrderItems(body.getOrderItems());
+        if (payload == null) {
+            reqDto.setUserId(UUID.randomUUID().toString());
+            reqDto.setOrderItems(body.getOrderItems());
+
+        } else {
+
+            reqDto.setUserId(payload.getId());
+            reqDto.setOrderItems(body.getOrderItems());
+
+        }
         ApiResponse<CreateOrderResDTO> response = orderHandler.createOrderHandler(reqDto);
         return ResponseEntity.status(response.getCode()).body(response);
     }

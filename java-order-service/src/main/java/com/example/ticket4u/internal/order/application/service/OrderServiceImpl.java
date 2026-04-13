@@ -1,16 +1,19 @@
 package com.example.ticket4u.internal.order.application.service;
 
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
 import com.example.ticket4u.internal.kafka.KafkaProducerService;
 import com.example.ticket4u.internal.order.application.dto.create.CreateOrderReqDTO;
 import com.example.ticket4u.internal.order.application.dto.create.CreateOrderResDTO;
+import com.example.ticket4u.internal.order.application.dto.create.OrderReqDTO;
 import com.example.ticket4u.internal.order.application.dto.delete.SoftDeleteOrderReqDTO;
 import com.example.ticket4u.internal.order.application.dto.delete.SoftDeleteOrderResDTO;
 import com.example.ticket4u.internal.order.application.dto.get.GetListOrderByUserReqDto;
@@ -28,8 +31,8 @@ import com.example.ticket4u.internal.order.domain.entity.OrderStatusEnum;
 import com.example.ticket4u.internal.order.domain.repositoryInterface.IOrderRepository;
 import com.example.ticket4u.internal.order.domain.repositoryInterface.IPaymentClient;
 import com.example.ticket4u.internal.order.domain.repositoryInterface.IProductClient;
-import com.example.ticket4u.internal.order.domain.repositoryInterface.IUserClient;
 import com.example.ticket4u.internal.order.infrastructure.api.dto.PaymentResponseData;
+import com.example.ticket4u.internal.order.infrastructure.api.dto.TicketData;
 import com.example.ticket4u.internal.order.infrastructure.api.dto.TicketResponseData;
 import com.example.ticket4u.internal.orderItem.domain.entity.OrderItem;
 import com.example.ticket4u.internal.orderItem.domain.repositoryInterface.IOrderItemRepository;
@@ -38,6 +41,7 @@ import com.example.ticket4u.pkg.response.PaginationResponse;
 import com.example.ticket4u.utils.TimeUtils;
 import com.example.ticket4u.utils.redis.RedisUtils;
 
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -48,7 +52,6 @@ import lombok.Setter;
 public class OrderServiceImpl implements IOrderService {
     private final IOrderRepository orderRepo;
     private final IOrderItemRepository orderItemRepo;
-    private final IUserClient userClient;
     private final IProductClient productClient;
     private final IPaymentClient paymentClient;
     private final KafkaProducerService kafkaProducerService;
@@ -56,55 +59,109 @@ public class OrderServiceImpl implements IOrderService {
     private final RedisUtils redisUtils;
 
     @Override
+    @Transactional
     public CreateOrderResDTO createOrder(CreateOrderReqDTO createReq) {
 
-        // if (!userClient.IsExists(createReq.getUserId())) {
-        // throw new IllegalArgumentException("User does not exist");
-        // }
+        // tránh việc user gửi request trùng lặp
+        List<String> itemParts = new ArrayList<>();
+        for (OrderReqDTO item : createReq.getOrderItems()) {
+            itemParts.add(item.getTicketUuid() + "-" + item.getQuantity());
+        }
+        Collections.sort(itemParts);
+        String rawKey = createReq.getUserId() + ":" + String.join("|", itemParts);
 
+        String idemKey = "order:lock:" + rawKey;
+
+        Boolean isFirst = redis.opsForValue()
+                .setIfAbsent(idemKey, "1", Duration.ofSeconds(5));
+
+        if (Boolean.FALSE.equals(isFirst)) {
+            throw new RuntimeException("Duplicate request");
+        }
+
+        List<String> productIDs = new ArrayList<>();
+        for (OrderReqDTO item : createReq.getOrderItems()) {
+            productIDs.add(item.getTicketUuid());
+        }
+
+        // lấy list
+        List<TicketData> tickets = productClient.getTicketsByIds(productIDs).getData();
+
+        // =========================
+        // 2. LUA SCRIPT (ATOMIC STOCK)
+        // =========================
+        String luaScript = """
+                    local stock = redis.call("GET", KEYS[1])
+                    if not stock then
+                        stock = ARGV[2]
+                        redis.call("SET", KEYS[1], stock)
+                    end
+
+                    stock = tonumber(stock)
+                    local quantity = tonumber(ARGV[1])
+
+                    if stock < quantity then
+                        return -1
+                    end
+
+                    stock = stock - quantity
+                    redis.call("SET", KEYS[1], stock)
+
+                    return stock
+                """;
+
+        DefaultRedisScript<Long> script = new DefaultRedisScript<>();
+        script.setScriptText(luaScript);
+        script.setResultType(Long.class);
+
+        // =========================
+        // 3. PROCESS ITEMS
+        // =========================
+        // int totalAmount = 0;
         List<OrderItem> orderItems = new ArrayList<>();
+
+        // để rollback redis nếu DB fail
+        List<OrderReqDTO> processedItems = new ArrayList<>();
+
         int totalAmount = 0;
-        // 2. loop các sản phẩm trong reqData
         for (var item : createReq.getOrderItems()) {
 
-            // 2.1 check product tồn tại
-            TicketResponseData ticketResDto = productClient.getTicketById(item.getTicketUuid());
-            if (ticketResDto.getData() == null) {
-                throw new ErrorCustom(404, "Product not found: " + item.getTicketUuid());
+            String ticketId = item.getTicketUuid();
+            String redisKey = "stock:product:" + ticketId;
+
+            TicketData ticket = null;
+            for (TicketData t : tickets) {
+                if (t.getId().equals(ticketId)) {
+                    ticket = t;
+                    break;
+                }
             }
 
-            String redisKey = "stock:product:" + item.getTicketUuid();
-
-            // 2.2 INIT STOCK nếu Redis chưa có
-            Object dataInCache = redisUtils.get(redisKey);
-            if (Boolean.FALSE.equals(dataInCache)) {
-                String totalQuantity = String.valueOf(ticketResDto.getData().getTotalQuantity());
-                redis.opsForValue().set(redisKey, totalQuantity);
+            if (ticket == null) {
+                throw new ErrorCustom(404, "Product not found");
             }
 
-            // 2.3 atomic
-            Long remain = redis.opsForValue()
-                    .decrement(redisKey, item.getQuantity());
+            Long remain = this.redis.execute(
+                    script,
+                    Collections.singletonList(redisKey),
+                    String.valueOf(item.getQuantity()),
+                    String.valueOf(ticket.getTotalQuantity()));
 
-            // Nếu không còn tồn kho
             if (remain == null || remain < 0) {
-                redis.opsForValue()
-                        .increment(redisKey, item.getQuantity());
-
-                throw new IllegalArgumentException(
-                        "Product out of stock: " + item.getTicketUuid());
+                throw new RuntimeException("Out of stock: " + ticketId);
             }
+
+            processedItems.add(item);
 
             orderItems.add(
                     OrderItem.builder()
-                            .ticketUuid(item.getTicketUuid())
+                            .ticketUuid(ticketId)
                             .quantity(item.getQuantity())
                             .build());
 
-            totalAmount = totalAmount + (ticketResDto.getData().getPrice() * item.getQuantity());
+            totalAmount += item.getQuantity() * ticket.getPrice();
         }
-
-        // 3. tạo order
+        // create order
         OrderEntity orderEntity = OrderEntity.builder()
                 .id(UUID.randomUUID().toString())
                 .status(OrderStatusEnum.PENDING)
@@ -119,168 +176,60 @@ public class OrderServiceImpl implements IOrderService {
                 .build();
 
         OrderEntity createdOrder;
+
         try {
+            // save order in db
             createdOrder = orderRepo.create(orderEntity);
+
             if (createdOrder.getId() == null || createdOrder.getId().isBlank()) {
                 throw new RuntimeException("Create order failed");
             }
+
+            // save order items in db
+            for (var item : orderItems) {
+
+                OrderItem orderItem = OrderItem.builder()
+                        .uuid(UUID.randomUUID().toString())
+                        .ticketUuid(item.getTicketUuid())
+                        .quantity(item.getQuantity())
+                        .orderUuid(createdOrder.getId())
+                        .createdAt(createdOrder.getCreatedAt())
+                        .modifiedAt(createdOrder.getModifiedAt())
+                        .deletedAt(0)
+                        .creatorId(createdOrder.getCreatorId())
+                        .modifierId(createdOrder.getModifierId())
+                        .deletorId("")
+                        .build();
+
+                OrderItem saved = orderItemRepo.CreateOrderItem(orderItem);
+
+                if (saved.getUuid() == null || saved.getUuid().isBlank()) {
+                    throw new RuntimeException("Create orderItem failed");
+                }
+            }
+
         } catch (Exception e) {
-            // =========================
-            // 4. ROLLBACK REDIS NẾU DB FAIL
-            // =========================
-            for (var item : createReq.getOrderItems()) {
+
+            // roll back redis if create order failed
+            for (var item : processedItems) {
                 redis.opsForValue().increment(
                         "stock:product:" + item.getTicketUuid(),
                         item.getQuantity());
             }
+
             throw e;
         }
 
-        // =========================
-        // 5. CREATE ORDER ITEMS
-        // =========================
-        for (var item : orderItems) {
-            OrderItem orderItem = OrderItem.builder()
-                    .uuid(UUID.randomUUID().toString())
-                    .ticketUuid(item.getTicketUuid())
-                    .quantity(item.getQuantity())
-                    .orderUuid(createdOrder.getId())
-                    .createdAt(createdOrder.getCreatedAt())
-                    .modifiedAt(createdOrder.getModifiedAt())
-                    .deletedAt(0)
-                    .creatorId(createdOrder.getCreatorId())
-                    .modifierId(createdOrder.getModifierId())
-                    .deletorId("")
-                    .build();
+        // sent kafak
+        kafkaProducerService.sendMessage("order.created", new ProduceCreatedOrderMessage(
+                createReq.getUserId(),
+                createdOrder.getId(),
+                createReq.getOrderItems().stream().map(i -> new Items(i.getTicketUuid(), i.getQuantity())).toList()));
 
-            OrderItem saved = orderItemRepo.CreateOrderItem(orderItem);
-            if (saved.getUuid() == null || saved.getUuid().isBlank()) {
-                throw new RuntimeException("Create orderItem failed");
-            }
-        }
+        PaymentResponseData resp = paymentClient.getPaymentURL(orderEntity.getId(), String.valueOf(totalAmount));
 
-        // =========================
-        // 6. SEND KAFKA EVENT
-        // =========================
-        ProduceCreatedOrderMessage message = new ProduceCreatedOrderMessage();
-        message.setUserId(createReq.getUserId());
-        message.setOrderId(createdOrder.getId());
-        message.setItems(new ArrayList<>());
-
-        for (var item : createReq.getOrderItems()) {
-            Items items = new Items();
-            items.setId(item.getTicketUuid());
-            items.setQuantity(item.getQuantity());
-            message.getItems().add(items);
-        }
-
-        kafkaProducerService.sendMessage("order.created", message);
-
-        // gọi api để lấy URL thanh toan
-        PaymentResponseData response = this.paymentClient.getPaymentURL(orderEntity.getId(),
-                String.valueOf(totalAmount));
-
-        return new CreateOrderResDTO(createdOrder.getId(), response.getData().getPayUrl());
+        return new CreateOrderResDTO(createdOrder.getId(), resp.getData().getPayUrl());
     }
-
-    // @Override
-    // public CreateOrderResDTO createOrder(CreateOrderReqDTO createReq) {
-
-    // // check user
-    // if (!userClient.IsExists(createReq.getUserId())) {
-    // throw new IllegalArgumentException("User does not exist");
-    // }
-
-    // List<OrderItem> orderItems = new ArrayList<>();
-
-    // // check products
-    // for (var item : createReq.getOrderItems()) {
-    // TicketResDto ticketResDto;
-    // ticketResDto = productClient.getTicketById(item.getTicketUuid());
-    // if (ticketResDto.getData() == null) {
-    // throw new ErrorCustom(404, "Product not found");
-    // }
-    // if (ticketResDto.getData().getTotalQuantity() == 0
-    // || ticketResDto.getData().getTotalQuantity() < item.getQuantity()) {
-    // throw new IllegalArgumentException("Product is not enough: " +
-    // item.getTicketUuid());
-    // }
-
-    // // lấy trong redis coi có hay không cái đã
-    // String key = "stock:product:" + String.valueOf(item.getTicketUuid());
-    // // nếu không có value thì đưa vô redis
-
-    // if (this.redis.opsForValue().get(key)=="nil"){
-    // this.redis.opsForValue().set(key, "");
-    // };
-
-    // this.redis.opsForValue().increment(key);
-
-    // OrderItem orderItem = OrderItem.builder()
-    // .ticketUuid(item.getTicketUuid())
-    // .quantity(item.getQuantity())
-    // .build();
-
-    // orderItems.add(orderItem);
-    // }
-
-    // // create order
-    // OrderEntity orderEntity = OrderEntity.builder()
-    // .id(UUID.randomUUID().toString())
-    // .status(OrderStatusEnum.PENDING)
-    // .userId(createReq.getUserId())
-    // .items(orderItems)
-    // .creatorId(createReq.getUserId())
-    // .modifierId(createReq.getUserId())
-    // .deletorId("")
-    // .createdAt((int) (System.currentTimeMillis() / 1000L))
-    // .modifiedAt((int) (System.currentTimeMillis() / 1000L))
-    // .deletedAt(0)
-    // .build();
-
-    // OrderEntity orderEntityCreated = orderRepo.create(orderEntity);
-    // if (orderEntityCreated.getId() == null ||
-    // orderEntityCreated.getId().isBlank()) {
-    // throw new RuntimeException("Create order failed");
-    // }
-
-    // // create orderItems
-    // for (var item : orderEntity.getItems()) {
-    // System.out.println(item.toString());
-    // OrderItem orderItem = OrderItem.builder()
-    // .uuid(UUID.randomUUID().toString())
-    // .ticketUuid(item.getTicketUuid())
-    // .quantity(item.getQuantity())
-    // .orderUuid(orderEntityCreated.getId())
-    // .createdAt(orderEntityCreated.getCreatedAt())
-    // .modifiedAt(orderEntityCreated.getModifiedAt())
-    // .deletedAt(0)
-    // .creatorId(orderEntityCreated.getCreatorId())
-    // .modifierId(orderEntityCreated.getModifierId())
-    // .deletorId("")
-    // .build();
-
-    // OrderItem saved = orderItemRepo.CreateOrderItem(orderItem);
-    // if (saved.getUuid() == null || saved.getUuid().isBlank()) {
-    // throw new RuntimeException("Create orderItem failed");
-    // }
-    // }
-    // ProduceCreatedOrderMessage message = new ProduceCreatedOrderMessage();
-    // message.setUserId(createReq.getUserId());
-    // message.setOrderId(orderEntityCreated.getId());
-    // message.setItems(new ArrayList<Items>());
-    // for (var item : createReq.getOrderItems()) {
-    // Items items = new Items();
-    // items.setId(item.getTicketUuid());
-    // items.setQuantity(item.getQuantity());
-    // message.getItems().add(items);
-    // }
-
-    // this.kafkaProducerService.sendMessage("order.created", message);
-    // System.out.println("Sending to Kafka: " + createReq.toJson());
-
-    // return new CreateOrderResDTO(orderEntityCreated.getId());
-    // }
 
     @Override
     public GetListOrderResDto getListOrder(GetListOrderReqDto getListOrderReqDto) {
@@ -327,7 +276,7 @@ public class OrderServiceImpl implements IOrderService {
             for (int i = 0; i < listOrderItem.size(); i++) {
                 // gọi service events ticket để lấy giá
 
-                TicketResponseData ticketResDto = this.productClient
+                TicketResponseData<TicketData> ticketResDto = this.productClient
                         .getTicketById(listOrderItem.get(i).getTicketUuid());
                 if (ticketResDto.getData() == null) {
                     throw new RuntimeException("Ticket not found");
@@ -474,7 +423,7 @@ public class OrderServiceImpl implements IOrderService {
         List<OrderItem> listOrderItem = this.orderItemRepo.GetManyByOrderID(orderId);
         Double totalPrice = 0.0;
         for (OrderItem item : listOrderItem) {
-            TicketResponseData ticketResDto = this.productClient.getTicketById(item.getTicketUuid());
+            TicketResponseData<TicketData> ticketResDto = this.productClient.getTicketById(item.getTicketUuid());
             if (ticketResDto != null && ticketResDto.getData() != null) {
                 totalPrice += ticketResDto.getData().getPrice() * item.getQuantity();
             }

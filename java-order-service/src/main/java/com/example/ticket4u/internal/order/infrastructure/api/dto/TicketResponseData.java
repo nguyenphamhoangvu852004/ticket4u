@@ -1,12 +1,11 @@
 
-
 package com.example.ticket4u.internal.order.infrastructure.api.dto;
 
 import lombok.Data;
 
 @Data
-public class TicketResponseData {
+public class TicketResponseData<T> {
     private int code;
     private String message;
-    private TicketData data;
+    private T data;
 }

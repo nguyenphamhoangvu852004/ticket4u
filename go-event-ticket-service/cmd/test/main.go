@@ -1,11 +1,18 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"go-event-ticket-service/utils"
+	repository "go-event-ticket-service/internal/events/infrastructure/repositoryImpl"
+)
+
+var (
+	ctx = context.Background()
 )
 
 func main() {
-	str := utils.GenerateRandomString(12)
-	fmt.Println(str)
+	repo := repository.NewLocationRepository()
+	res, _ := repo.GetListProvinces(ctx)
+
+	fmt.Println(res)
 }

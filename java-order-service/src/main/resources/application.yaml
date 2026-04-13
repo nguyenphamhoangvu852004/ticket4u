@@ -10,6 +10,9 @@ springdoc:
         path: /order-service/swagger/ui
     
 server:
+    tomcat:
+        threads:
+            max: 1000
     servlet:
         context-path: /api/v1/2025
     port: 8086
@@ -24,6 +27,8 @@ spring:
     jackson:
         default-property-inclusion: non_null
     datasource:
+        hikari:
+            maximum-pool-size: 100
         url: jdbc:mysql://order-mysql:3306/ticket4u_test
         # url: jdbc:mysql://localhost:3301/ticket4u_test
         username: root

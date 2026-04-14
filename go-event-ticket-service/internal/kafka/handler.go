@@ -7,6 +7,8 @@ import (
 	"go-event-ticket-service/internal/kafka/dtos"
 	"go-event-ticket-service/internal/tickets/application/dto"
 	"go-event-ticket-service/internal/tickets/application/service"
+
+	"github.com/segmentio/kafka-go"
 )
 
 const (
@@ -18,10 +20,10 @@ type OrderEventHandler struct {
 	ticketService service.TicketService
 }
 
-func (h *OrderEventHandler) Handle(data []byte, topic string) error {
-	switch topic {
+func (h *OrderEventHandler) Handle(msg kafka.Message) error {
+	switch msg.Topic {
 	case TopicOrderCreated:
-		return h.HandleOrderCreated(data)
+		return h.HandleOrderCreated(msg.Value)
 	case TopicOrderUpdated:
 		fmt.Println("đang xử lý sau khi nhận message order.updated")
 		return nil

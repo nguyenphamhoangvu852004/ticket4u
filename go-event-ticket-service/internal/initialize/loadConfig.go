@@ -15,7 +15,6 @@ func LoadConfig() {
 
 	switch env {
 	case "docker":
-
 		viper.AddConfigPath("../config")
 		viper.SetConfigName("config.docker")
 		viper.SetConfigType("yaml")

@@ -1,0 +1,21 @@
+services:
+  api-gateway-v2:
+    build:
+      context: ../api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway-v2
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATA_REDIS_HOST=redis-api-gateway-container-v2
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://host.docker.internal:8761/eureka/
+      - EUREKA_INSTANCE_PREFER_IP_ADDRESS=true
+      - EUREKA_INSTANCE_IP_ADDRESS=host.docker.internal
+    depends_on:
+      - redis-api-gateway-v2
+
+  redis-api-gateway-v2:
+    image: redis:alpine
+    container_name: redis-api-gateway-container-v2
+    ports:
+      - "6382:6379"

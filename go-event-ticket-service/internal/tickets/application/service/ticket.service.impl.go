@@ -2,6 +2,9 @@ package service
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
+	"errors"
 	"fmt"
 	evenTimeRepo "go-event-ticket-service/internal/eventTimes/domain/repository"
 	"go-event-ticket-service/internal/tickets/application/dto"
@@ -21,6 +24,37 @@ import (
 type ticketService struct {
 	ticketRepo    ticketRepo.TicketRepository
 	eventTimeRepo evenTimeRepo.EventTimeRepository
+}
+
+// GetTicketsByIds implements [TicketService].
+func (t *ticketService) GetTicketsByIds(ctx context.Context, ids []string) ([]*dto.GetTicketByIDRes, error) {
+	// var list []entity.TicketEntity
+
+	var outputDto []*dto.GetTicketByIDRes
+
+	for i := 0; i < len(ids); i++ {
+		entity, err := t.ticketRepo.GetTicketByID(ctx, ids[i])
+		if err != nil {
+			return nil, response.NewAPIError(
+				http.StatusInternalServerError,
+				http.StatusText(http.StatusInternalServerError),
+				map[string]string{"error": err.Error()})
+		}
+		newOutput := &dto.GetTicketByIDRes{
+			ID:            entity.ID,
+			Title:         entity.Title,
+			Price:         entity.Price,
+			Status:        string(entity.Status),
+			TotalQuantity: entity.TotalQuantity,
+			SoldQuantity:  entity.SoldQuantity,
+			EventTimeID:   entity.EventTimeID,
+			Created_at:    utils.UNIXtoTime(entity.BaseEntity.CreatedAt).String(),
+			Updated_at:    utils.UNIXtoTime(entity.BaseEntity.ModifiedAt).String(),
+		}
+		outputDto = append(outputDto, newOutput)
+	}
+
+	return outputDto, nil
 }
 
 // GetTicketsByEventTimeId implements TicketService.
@@ -65,33 +99,32 @@ func (t *ticketService) GetTicketsByEventTimeId(ctx context.Context, reqData *dt
 func (t *ticketService) UpdateSoldAmount(ctx context.Context, reqData *dto.UpdateSoldAmountReq) (*dto.UpdateSoldAmountRes, error) {
 
 	for _, ticket := range reqData.Tickets {
-		ticketEntity, err := t.ticketRepo.GetTicketsByID(ctx, ticket.TicketId)
+		ticketEntity, err := t.ticketRepo.GetTicketByID(ctx, ticket.TicketId)
 		if err != nil {
 			return nil, err
 		}
 		if ticketEntity == nil {
-			return nil, response.NewAPIError(http.StatusNotFound, "ticket not found", nil)
+			return nil, response.NewAPIError(http.StatusNotFound, "ticket not found", fmt.Sprintf("TicketID %s not found", ticket.TicketId))
+		}
+		if !ticketEntity.IsValidQuantity(ticket.Amount) {
+			return nil, response.NewAPIError(http.StatusBadRequest, "ticket is not enough", fmt.Sprintf("TicketID %s insufficient quantity", ticket.TicketId))
 		}
 		if ticketEntity.Status == entity.TicketStatusSoldOut {
-			return nil, response.NewAPIError(http.StatusBadRequest, "ticket is sold out", nil)
+			return nil, response.NewAPIError(http.StatusBadRequest, "ticket is sold out", fmt.Sprintf("TicketID %s is sold out", ticket.TicketId))
 		}
-		ticketEntity.SoldQuantity += uint64(ticket.Amount)
-		ticketEntity.TotalQuantity -= uint64(ticket.Amount)
-		if ticketEntity.TotalQuantity == 0 {
-			ticketEntity.Status = entity.TicketStatusSoldOut
+		ticketEntity.SetQuantity(ticket.Amount)
+		ticketEntity.SetStatus()
+		isUpdateAmountSuccess, errr := t.ticketRepo.UpdateAmount(ctx, ticketEntity)
+		if errr != nil {
+			return nil, response.NewAPIError(http.StatusBadRequest,fmt.Sprintf("Update Amount TicketID %s with amount %d fail",ticket.TicketId,ticket.Amount), errr.Error())
 		}
-		isSucc, er := t.ticketRepo.UpdateAmount(ctx, ticketEntity)
-		if er != nil {
-			return nil, response.NewAPIError(http.StatusBadRequest, "update fail", nil)
-		}
-		if isSucc != 1 {
-			return nil, response.NewAPIError(http.StatusBadRequest, "update fail", nil)
+		if isUpdateAmountSuccess != 1 {
+			return nil, response.NewAPIError(http.StatusBadRequest,fmt.Sprintf("Update Amount TicketID %s with amount %d fail",ticket.TicketId,ticket.Amount), errr.Error())
 		}
 	}
 	return &dto.UpdateSoldAmountRes{
 		Tickets: reqData.Tickets,
 	}, nil
-
 }
 
 func (t *ticketService) GetAllTickets(ctx context.Context, reqData *dto.GetTicketsListReq) (*dto.GetTicketsListRes, error) {
@@ -202,12 +235,49 @@ func (t *ticketService) DeleteTicket(ctx context.Context, reqData *dto.DeleteTic
 
 // GetTicketByID implements TicketService.
 func (t *ticketService) GetTicketByID(ctx context.Context, ticketId string) (*dto.GetTicketByIDRes, error) {
-	ticketEntity, err := t.ticketRepo.GetTicketsByID(ctx, ticketId)
-	if ticketEntity == nil {
-		return nil, response.NewAPIError(http.StatusNotFound, "ticket not found", nil)
-	}
+	var ticketEntity = &entity.TicketEntity{}
+	var ticketKey string = fmt.Sprintf("ticket:%s", ticketId)
+	// lấy trong cache cái đã
+	ticket, err := utils.GetRedis(ctx, ticketKey)
+
 	if err != nil {
-		return nil, err
+		// nếu lỗi redis thì return luôn
+		return nil, response.NewAPIError(
+			http.StatusInternalServerError,
+			http.StatusText(http.StatusInternalServerError),
+			map[string]string{"error": err.Error()})
+	}
+	// nếu ko có value ticketKey thì call db
+	if ticket == "" {
+		ticketEntity, err = t.ticketRepo.GetTicketByID(ctx, ticketId)
+
+		if err != nil || ticketEntity == nil || ticketEntity.ID == "" {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, response.NewAPIError(
+					http.StatusNotFound,
+					"Ticket not found",
+					map[string]string{"ticketId": sql.ErrNoRows.Error()})
+			}
+			return nil, err
+		}
+
+		// lưu vô redis
+		data, _ := json.Marshal(ticketEntity)
+		if err := utils.SaveRedis(ctx, ticketKey, string(data), 300); err != nil {
+			return nil, response.NewAPIError(
+				http.StatusNotFound,
+				fmt.Sprintf("Save key %s err", ticketKey),
+				map[string]string{"redis": err.Error()})
+		}
+	} else {
+		// nếu có value thì phải lấy trong cache
+		if err := json.Unmarshal([]byte(ticket), ticketEntity); err != nil {
+			return nil, response.NewAPIError(
+				http.StatusNotFound,
+				fmt.Sprintf("error while unmarshal data"),
+				map[string]string{"error": err.Error()})
+		}
+
 	}
 
 	return &dto.GetTicketByIDRes{

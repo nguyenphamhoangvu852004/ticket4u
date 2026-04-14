@@ -64,6 +64,16 @@ func (e *eventRepository) Count(ctx context.Context) (int64, error) {
 	return number, nil
 }
 
+// CountByOrganizerId implements repository.EventRepository.
+func (e *eventRepository) CountByOrganizerId(ctx context.Context, organizerId string) (int64, error) {
+	var count int64
+	err := e.dbRaw.QueryRowContext(ctx, "SELECT COUNT(*) FROM events WHERE organizer_id = ? AND deleted_at = 0", organizerId).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
 // IsExists implements repository.EventRepository.
 func (e *eventRepository) IsExists(ctx context.Context, id string) (bool, error) {
 	rs, err := e.db.GetEventById(ctx, id)

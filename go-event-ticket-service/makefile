@@ -8,8 +8,7 @@ dev:
 
 
 docker-up:
-# 	docker-compose --file environment/docker-compose-container.yml up --detach --build && docker network connect microservice-net go-event-ticket-service
-	docker-compose --file ./docker-compose.yml up --detach --build && docker network connect microservice-net go-event-ticket-service
+	make swagger && docker compose -f docker-compose.yml up -d --build
 
 docker-down:
 	docker-compose --file environment/docker-compose-container.yml down --volumes

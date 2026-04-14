@@ -19,7 +19,11 @@ func (c *OrderConsumer) Start(ctx context.Context) {
 			log.Println(err)
 			continue
 		}
-		c.handler.Handle(msg.Value, msg.Topic)
+		// c.handler.Handle(msg.Value, msg.Topic)
+		c.handler.Handle(msg)
+		if err := c.reader.CommitMessages(ctx, msg); err != nil {
+			log.Fatal("failed to commit messages: ", err)
+		}
 	}
 }
 

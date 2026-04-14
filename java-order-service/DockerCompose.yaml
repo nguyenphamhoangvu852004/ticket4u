@@ -8,12 +8,16 @@ services:
       MYSQL_DATABASE: ticket4u_test
     ports:
       - "3301:3306"
+    networks:
+      - microservice-net
 
   order-redis:
     container_name: order-redis
     image: redis:8.0
     ports:
       - "6304:6379"
+    networks:
+      - microservice-net
 
   java-order-service:
     build: .
@@ -25,3 +29,9 @@ services:
     depends_on:
       - order-mysql
       - order-redis
+    networks:
+      - microservice-net
+
+networks:
+  microservice-net:
+    external: true

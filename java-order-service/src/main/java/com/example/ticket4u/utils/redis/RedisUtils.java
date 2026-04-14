@@ -17,7 +17,9 @@ public class RedisUtils {
         redisTemplate.opsForValue().set(key, value);
     }
 
-    public String getRedisKey(String key) {
+    public Object get(String key) {
         return redisTemplate.opsForValue().get(key);
     }
+
+
 }

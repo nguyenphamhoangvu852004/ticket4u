@@ -58,7 +58,7 @@ export class UserHttp {
     log('User info from token:', user);
 
     const responseData: ResponseData<GetUserInfoResDto> = await this.userHandler.getUserInfo(
-      new GetUserInfoReqDto(user.email),
+      new GetUserInfoReqDto(user.id),
     );
     res.status(responseData.code).json(responseData);
     return;

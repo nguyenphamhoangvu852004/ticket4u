@@ -18,4 +18,5 @@ export interface AuthServiceInterface {
   login(reqData: LoginUserReqDto): Promise<LoginUserResDto>;
   getUserPermissionsByUserId(reqData: GetUserBaseReqDto): Promise<GetUserBaseResDto>;
   getDeviceIPAddress(reqData: GetDeviceIPAdressReqDto): Promise<GetDeviceIPAdressResDto>;
+  refresh(refreshToken: string): Promise<LoginUserResDto>;
 }

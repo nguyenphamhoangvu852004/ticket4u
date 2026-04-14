@@ -1,0 +1,10 @@
+services:
+  frontend-v2:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: frontend-v2
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_GATEWAY_URL=http://localhost:8080

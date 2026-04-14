@@ -22,7 +22,7 @@ func (s *searchService) ExecuteSearch(ctx context.Context, reqData *dto.SearchEv
 	return s.searchRepo.Query(ctx, newEntity)
 }
 
-func NewSearchSerivce(repo repository.SearchRepository) SearchService {
+func NewSearchService(repo repository.SearchRepository) SearchService {
 	return &searchService{
 		searchRepo: repo,
 	}

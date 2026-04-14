@@ -19,6 +19,7 @@ import (
 	"go-event-ticket-service/pkg/common"
 	"go-event-ticket-service/pkg/response"
 	"go-event-ticket-service/utils"
+	cacher "go-event-ticket-service/utils/cache"
 	"net/http"
 	"strconv"
 	"time"
@@ -30,6 +31,7 @@ type eventService struct {
 	eventTimeRepo eventTimeRepo.EventTimeRepository
 	eventsRepo    repository.EventRepository
 	ticketsRepo   ticketRepo.TicketRepository
+	cacher        cacher.CacherInterface
 	// eventTimesRepo repositoryEventTimeRepository
 }
 
@@ -45,24 +47,16 @@ func (service *eventService) GetEventsListOfOrganizer(ctx context.Context, reqDa
 	uintSize := uint64(20)
 	offset := (uintPage - 1) * uintSize
 
-	cacheKey := fmt.Sprintf("events:page:%d:size:%d", uintPage, uintSize)
+	cacheKey := fmt.Sprintf("events:organizer:%s:page:%d:size:%d", organizationId, uintPage, uintSize)
 
-	// // 1. Try Redis
-	// cached, err := utils.GetRedis(ctx, cacheKey)
-	// if err == nil && cached != "" {
-	// 	var cachedRes dto.GetEventsListRes
-	// 	if err := json.Unmarshal([]byte(cached), &cachedRes); err == nil {
-	// 		return &cachedRes, nil
-	// 	}
-	// }
-
-	// // 2. Query MySQL
-	// params := &params.GetEventsParams{
-	// 	PaginateParams: params.PaginateParams{
-	// 		Limit:  int(uintSize),
-	// 		Offset: int(offset),
-	// 	},
-	// }
+	// try get from redis
+	cached, err := service.cacher.GetRedis(ctx, cacheKey)
+	if err == nil && cached != "" {
+		var cachedRes dto.GetEventsListOfOrganizerRes
+		if err := json.Unmarshal([]byte(cached), &cachedRes); err == nil {
+			return &cachedRes, nil
+		}
+	}
 
 	params := &params.GetEventsByOrganizerIdParams{
 		GetEventsParams: params.GetEventsParams{
@@ -105,7 +99,7 @@ func (service *eventService) GetEventsListOfOrganizer(ctx context.Context, reqDa
 		resDto.List = append(resDto.List, eventDto)
 	}
 
-	totalItems, err := service.eventsRepo.Count(ctx)
+	totalItems, err := service.eventsRepo.CountByOrganizerId(ctx, organizationId)
 	if err != nil {
 		return nil, err
 	}
@@ -118,14 +112,14 @@ func (service *eventService) GetEventsListOfOrganizer(ctx context.Context, reqDa
 	)
 
 	// 3. Save to Redis cache
+
 	serialized, _ := json.Marshal(resDto)
-	err = utils.SaveRedis(ctx, cacheKey, string(serialized), 60*5) // TTL 5 minutes
+	err = service.cacher.SaveRedis(ctx, cacheKey, string(serialized), 5000) // TTL is second
+
 	if err != nil {
 		return nil, err
 	}
-
 	return &resDto, nil
-
 }
 
 // RestoreEvent implements EventService.
@@ -296,6 +290,20 @@ func (service *eventService) CreateEvent(ctx context.Context, reqData *dto.Creat
 
 // nic("unimplemented")
 func (service *eventService) GetEventById(ctx context.Context, reqData *dto.GetEventByIDReq) (resData *dto.GetEventByIDRes, err error) {
+	// lấy trong cache
+	cacheKey := fmt.Sprintf("event:%s", reqData.ID)
+
+	cacheVal, err := utils.GetRedis(ctx, cacheKey)
+	if err != nil {
+		return nil, response.NewAPIError(http.StatusInternalServerError, "Redis error", err)
+	}
+	if cacheVal != "" {
+		var res dto.GetEventByIDRes
+		if err := json.Unmarshal([]byte(cacheVal), &res); err != nil {
+			return nil, response.NewAPIError(http.StatusInternalServerError, "Cache decode error", err)
+		}
+		return &res, nil
+	}
 
 	// gọi api lấy event
 	eventEntity, err := service.eventsRepo.GetEventByID(ctx, reqData.ID)
@@ -362,6 +370,8 @@ func (service *eventService) GetEventById(ctx context.Context, reqData *dto.GetE
 		}
 	}
 
+	data, _ := json.Marshal(resDto)
+	_ = utils.SaveRedis(ctx, cacheKey, string(data), 300)
 	return &resDto, nil
 }
 
@@ -440,7 +450,7 @@ func (service *eventService) GetEventsList(ctx context.Context, reqData *dto.Get
 
 	// 3. Save to Redis cache
 	serialized, _ := json.Marshal(resDto)
-	err = utils.SaveRedis(ctx, cacheKey, string(serialized), 60*5) // TTL 5 minutes
+	err = service.cacher.SaveRedis(ctx, cacheKey, string(serialized), 3000)
 	if err != nil {
 		return nil, err
 	}
@@ -459,10 +469,11 @@ func (s *eventService) Exists(ctx context.Context, id string) (bool, error) {
 	return true, nil
 }
 
-func NewEventSerivce(eventRepo repository.EventRepository, ticketRepo ticketRepo.TicketRepository, eventTimeRepo eventTimeRepo.EventTimeRepository) EventService {
+func NewEventService(eventRepo repository.EventRepository, cacher cacher.CacherInterface, ticketRepo ticketRepo.TicketRepository, eventTimeRepo eventTimeRepo.EventTimeRepository) EventService {
 	return &eventService{
 		eventsRepo:    eventRepo,
 		ticketsRepo:   ticketRepo,
 		eventTimeRepo: eventTimeRepo,
+		cacher:        cacher,
 	}
 }

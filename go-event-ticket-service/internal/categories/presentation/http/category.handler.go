@@ -11,6 +11,13 @@ type CategoryHandler struct {
 	service service.CategoryService
 }
 
+// Get available categories documentation
+// @Summary      Get list categories
+// @Description  Get list categories
+// @Tags         Categories
+// @Success      200  {object}  response.APIResponse
+// @Failure      500  {object}  response.APIResponse
+// @Router       /categories [get]
 func (c *CategoryHandler) GetListCategoryHandler(ctx *gin.Context) (res interface{}, err error) {
 	rs, err := c.service.GetListCategoryHandler(ctx, &dto.GetCategoriesListReq{})
 	if err != nil {

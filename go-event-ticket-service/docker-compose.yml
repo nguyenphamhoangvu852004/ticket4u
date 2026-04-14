@@ -1,8 +1,8 @@
 version: "3.9"
 
 networks:
-  go-event-ticket-networks:
-    driver: bridge
+  microservice-net:
+    external: true
 
 services:
   db:
@@ -16,7 +16,7 @@ services:
     volumes:
       - ./data/mysql_data:/var/lib/mysql
     networks:
-      - go-event-ticket-networks
+      - microservice-net
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pshopdev"]
       interval: 5s
@@ -29,7 +29,7 @@ services:
     ports:
       - "6302:6379"
     networks:
-      - go-event-ticket-networks
+      - microservice-net
 
   migrate:
     container_name: migrate-database-container
@@ -38,7 +38,7 @@ services:
     volumes:
       - .:/app
     networks:
-      - go-event-ticket-networks
+      - microservice-net
     depends_on:
       db:
         condition: service_healthy
@@ -56,7 +56,7 @@ services:
       - .:/app
     command: ["generate", "-f", "/app/sqlc.yaml"]
     networks:
-      - go-event-ticket-networks
+      - microservice-net
 
   product:
     container_name: go-event-ticket-service
@@ -73,4 +73,4 @@ services:
       redis:
         condition: service_started
     networks:
-      - go-event-ticket-networks
+      - microservice-net

@@ -1,5 +1,257 @@
 basePath: /api/v1/2025
 definitions:
+  common.PaginationRes:
+    properties:
+      currentPage:
+        type: integer
+      perPage:
+        type: integer
+      totalItems:
+        type: integer
+      totalPage:
+        type: integer
+    type: object
+  dto.CreateEventRes:
+    properties:
+      id:
+        type: string
+    type: object
+  dto.CreateEventTimeReq:
+    properties:
+      creatorId:
+        type: string
+      description:
+        type: string
+      endTime:
+        type: string
+      eventId:
+        type: string
+      startTime:
+        type: string
+    type: object
+  dto.CreateEventTimeRes:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+    type: object
+  dto.CreateTicketReq:
+    properties:
+      creatorId:
+        type: string
+      eventTimeId:
+        type: string
+      price:
+        type: string
+      quantity:
+        type: string
+      title:
+        type: string
+    required:
+    - creatorId
+    - eventTimeId
+    - price
+    - quantity
+    - title
+    type: object
+  dto.CreateTicketRes:
+    properties:
+      id:
+        type: string
+    type: object
+  dto.DeleteTicketReq:
+    properties:
+      deletorId:
+        type: string
+      id:
+        type: string
+    required:
+    - deletorId
+    - id
+    type: object
+  dto.DeleteTicketRes:
+    properties:
+      deletedAt:
+        type: string
+      id:
+        type: string
+    type: object
+  dto.EventOutputDTO:
+    properties:
+      address:
+        type: string
+      category:
+        $ref: '#/definitions/internal_events_application_dto.CategoryOutputDTO'
+      createdAt:
+        type: string
+      eventTimes:
+        items:
+          $ref: '#/definitions/dto.EventTimeOutputDTO'
+        type: array
+      id:
+        type: string
+      imageUrl:
+        type: string
+      modifiedAt:
+        type: string
+      organizer:
+        type: string
+      title:
+        type: string
+    type: object
+  dto.EventTimeOutputDTO:
+    properties:
+      description:
+        type: string
+      endTime:
+        type: string
+      id:
+        type: string
+      startTime:
+        type: string
+      tickets:
+        items:
+          $ref: '#/definitions/dto.TicketOutputDTO'
+        type: array
+    type: object
+  dto.GetDeletedListRes:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/dto.EventOutputDTO'
+        type: array
+      metadata:
+        $ref: '#/definitions/common.PaginationRes'
+    type: object
+  dto.GetEventByIDRes:
+    properties:
+      event:
+        $ref: '#/definitions/dto.EventOutputDTO'
+    type: object
+  dto.GetEventTimeByIdRes:
+    properties:
+      createdAt:
+        type: string
+      endTime:
+        type: string
+      eventId:
+        type: string
+      id:
+        type: string
+      startTime:
+        type: string
+    type: object
+  dto.GetEventsListRes:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/dto.EventOutputDTO'
+        type: array
+      metadata:
+        $ref: '#/definitions/common.PaginationRes'
+    type: object
+  dto.GetTicketByIDRes:
+    properties:
+      createdAt:
+        type: string
+      eventTimeId:
+        type: string
+      id:
+        type: string
+      price:
+        type: number
+      soldQuantity:
+        type: integer
+      status:
+        type: string
+      title:
+        type: string
+      totalQuantity:
+        type: integer
+      updatedAt:
+        type: string
+    type: object
+  dto.GetTicketsByEventTimeIdRes:
+    properties:
+      eventTimeId:
+        type: string
+      tickets:
+        items:
+          $ref: '#/definitions/dto.GetTicketByIDRes'
+        type: array
+    type: object
+  dto.GetTicketsListRes:
+    properties:
+      tickets:
+        items:
+          $ref: '#/definitions/dto.GetTicketByIDRes'
+        type: array
+    type: object
+  dto.ModifyEventReq:
+    properties:
+      address:
+        type: string
+      id:
+        type: string
+      modifierId:
+        type: string
+      organizerId:
+        type: string
+      title:
+        type: string
+    type: object
+  dto.ModifyEventRes:
+    properties:
+      id:
+        type: string
+    type: object
+  dto.RestoreEventRes:
+    properties:
+      id:
+        type: string
+    type: object
+  dto.SoftDeleteEventTimeReq:
+    properties:
+      deletorId:
+        type: string
+      eventTimeId:
+        type: string
+    required:
+    - deletorId
+    type: object
+  dto.SoftDeleteEventTimeRes:
+    properties:
+      deletedAt:
+        type: integer
+      eventTimeId:
+        type: string
+    required:
+    - deletedAt
+    - eventTimeId
+    type: object
+  dto.TicketOutputDTO:
+    properties:
+      id:
+        type: string
+      price:
+        type: string
+      quantity:
+        type: string
+      status:
+        type: string
+      title:
+        type: string
+    type: object
+  internal_events_application_dto.CategoryOutputDTO:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      title:
+        type: string
+    type: object
   response.APIResponse:
     properties:
       code:
@@ -22,12 +274,166 @@ info:
   title: API Document for Event Ticket Service
   version: "1.0"
 paths:
+  /categories:
+    get:
+      description: Get list categories
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Get list categories
+      tags:
+      - Categories
+  /eventTimes/{eventTimeId}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete an event time and its associated tickets
+      parameters:
+      - description: Event Time ID
+        in: path
+        name: eventTimeId
+        required: true
+        type: string
+      - description: Delete request body
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SoftDeleteEventTimeReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.SoftDeleteEventTimeRes'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Soft delete event time
+      tags:
+      - EventTimes
+    get:
+      consumes:
+      - application/json
+      description: Get details of an event time by its ID
+      parameters:
+      - description: Event Time ID
+        in: path
+        name: eventTimeId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.GetEventTimeByIdRes'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Get event time by ID
+      tags:
+      - EventTimes
+  /eventTimes/{eventTimeId}/tickets:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of tickets for a specific event time
+      parameters:
+      - description: Event Time ID
+        in: path
+        name: eventTimeId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.GetTicketsByEventTimeIdRes'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Get tickets by event time ID
+      tags:
+      - Tickets
+    post:
+      consumes:
+      - application/json
+      description: Create a new ticket for a specific event time
+      parameters:
+      - description: Event Time ID
+        in: path
+        name: eventTimeId
+        required: true
+        type: string
+      - description: Create ticket request
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateTicketReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CreateTicketRes'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Create ticket
+      tags:
+      - Tickets
   /events:
     get:
       consumes:
       - application/json
-      description: Get list events with pagination, pass the JWT bearer token in the
-        header to get the data from the organizer
+      description: Get list events with pagination. If a valid JWT token is provided,
+        it returns events owned by the organizer. Otherwise, it returns all available
+        events.
       parameters:
       - default: "1"
         description: Page number
@@ -38,9 +444,15 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Returns dto.GetEventsListRes or dto.GetEventsListOfOrganizerRes
+            depending on authentication
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.GetEventsListRes'
+              type: object
         "500":
           description: Internal Server Error
           schema:
@@ -53,7 +465,8 @@ paths:
     post:
       consumes:
       - multipart/form-data
-      description: Create a new event with eventTimes as JSON string
+      description: Create a new event. The `eventTimes` parameter must be a JSON string
+        of []EventTimeDTO.
       parameters:
       - description: Event title
         in: formData
@@ -70,7 +483,15 @@ paths:
         name: categoryId
         required: true
         type: string
-      - description: Event times as JSON string
+      - description: Event image
+        in: formData
+        name: image
+        type: file
+      - description: 'JSON array of EventTimeDTO. Attributes: startTime (string),
+          endTime (string), description (string), tickets ([]TicketDTO). TicketDTO
+          attributes: title (string), price (string), status (string), quantity (string).'
+        example: '[{"startTime":"2025-03-01T10:00:00Z","endTime":"2025-03-01T12:00:00Z","description":"Show
+          1","tickets":[{"title":"Standard","price":"50","status":"available","quantity":"100"}]}]'
         in: formData
         name: eventTimes
         required: true
@@ -81,7 +502,12 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CreateEventRes'
+              type: object
         "400":
           description: Bad Request
           schema:
@@ -90,12 +516,331 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.APIResponse'
       security:
-      - BearerAuth: []
       - Bearer: []
       summary: Create event
       tags:
       - Events
+  /events/{eventId}/eventTimes:
+    post:
+      consumes:
+      - application/json
+      description: Create a new event time for a specific event
+      parameters:
+      - description: Event ID
+        in: path
+        name: eventId
+        required: true
+        type: string
+      - description: Create event time request
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateEventTimeReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.CreateEventTimeRes'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Create event time
+      tags:
+      - EventTimes
+  /events/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft-delete an event by its ID
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - Bearer: []
+      summary: Delete event
+      tags:
+      - Events
+    get:
+      consumes:
+      - application/json
+      description: Get details of a single event by its ID
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.GetEventByIDRes'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Get event by ID
+      tags:
+      - Events
+    patch:
+      consumes:
+      - application/json
+      description: Update event information
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Modify event request
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ModifyEventReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ModifyEventRes'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - Bearer: []
+      summary: Modify event
+      tags:
+      - Events
+  /events/deleted:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of soft-deleted events with pagination
+      parameters:
+      - default: "1"
+        description: Page number
+        in: query
+        name: page
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.GetDeletedListRes'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - Bearer: []
+      summary: Get deleted events
+      tags:
+      - Events
+  /events/restore/{id}:
+    patch:
+      consumes:
+      - application/json
+      description: Restore a soft-deleted event by its ID
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.RestoreEventRes'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      security:
+      - Bearer: []
+      summary: Restore event
+      tags:
+      - Events
+  /tickets:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of all tickets
+      parameters:
+      - default: "1"
+        description: Page number
+        in: query
+        name: page
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.GetTicketsListRes'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Get all tickets
+      tags:
+      - Tickets
+  /tickets/{ticketId}:
+    delete:
+      consumes:
+      - application/json
+      description: Soft delete a ticket by its ID
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: ticketId
+        required: true
+        type: string
+      - description: Delete ticket request
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/dto.DeleteTicketReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.DeleteTicketRes'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Soft delete ticket
+      tags:
+      - Tickets
+    get:
+      consumes:
+      - application/json
+      description: Get details of a single ticket by its ID
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: ticketId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.GetTicketByIDRes'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: Get ticket by ID
+      tags:
+      - Tickets
 securityDefinitions:
   Bearer:
     in: header

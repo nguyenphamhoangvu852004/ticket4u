@@ -57,10 +57,6 @@ cloudinary:
   url: ""
 
 elasticsearch:
-  addresses:
-    - "https://localhost:9200"
-  username: "elastic"
-  password: ""
-
-
-
+  addresses: "https://localhost:9200"
+  username: elastic
+  password: BQBF6RXMKx+NK2pCgbsp

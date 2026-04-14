@@ -25,7 +25,7 @@ import { log } from 'console';
 import * as zod from 'zod';
 @Injectable()
 export class AuthHandler {
-  constructor(@Inject('AuthService') private readonly authService: AuthServiceInterface) {}
+  constructor(@Inject('AuthService') private readonly authService: AuthServiceInterface) { }
 
   async getDeviceIPAddress(reqData: GetDeviceIPAdressReqDto): Promise<ResponseData<GetDeviceIPAdressResDto>> {
     try {
@@ -97,6 +97,17 @@ export class AuthHandler {
         error.message as string,
         null as unknown as UpdateRegistrateUserResDto,
       );
+    }
+  }
+
+  async refresh(refreshToken: string): Promise<ResponseData<LoginUserResDto>> {
+    try {
+      return ResponseData.success(await this.authService.refresh(refreshToken));
+    } catch (error) {
+      if (error instanceof ErrorCustom) {
+        return ResponseData.error(error.statusCode, error.message, null as unknown as LoginUserResDto);
+      }
+      throw error;
     }
   }
 }

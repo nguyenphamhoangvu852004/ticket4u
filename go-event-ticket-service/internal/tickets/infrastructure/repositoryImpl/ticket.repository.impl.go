@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"go-event-ticket-service/internal/database"
 	"go-event-ticket-service/internal/tickets/domain/entity"
@@ -22,7 +23,7 @@ func (t *ticketRepository) UpdateAmount(ctx context.Context, entity *entity.Tick
 		ID:            entity.ID,
 		TotalQuantity: int32(entity.TotalQuantity),
 		SoldQuantity:  int32(entity.SoldQuantity),
-		Status:        database.TicketsStatus(entity.Status),
+		Status:        toDBStatus(entity.Status),
 		ModifiedAt:    entity.BaseEntity.ModifiedAt,
 		ModifierID:    entity.BaseEntity.ModifierID,
 	})
@@ -38,11 +39,15 @@ func (t *ticketRepository) UpdateAmount(ctx context.Context, entity *entity.Tick
 	return 1, nil
 }
 
-// GetTicketsByID implements repository.TicketRepository.
-func (t *ticketRepository) GetTicketsByID(ctx context.Context, id string) (*entity.TicketEntity, error) {
+// GetTicketByID implements repository.TicketRepository.
+func (t *ticketRepository) GetTicketByID(ctx context.Context, id string) (*entity.TicketEntity, error) {
 	ticketModel, err := t.db.GetTicketsById(ctx, id)
 	if err != nil {
 		return nil, err
+	}
+
+	if ticketModel.ID == "" {
+		return nil, sql.ErrNoRows
 	}
 
 	ticketEntity := &entity.TicketEntity{

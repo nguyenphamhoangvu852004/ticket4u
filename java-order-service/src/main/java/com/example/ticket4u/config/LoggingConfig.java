@@ -12,8 +12,10 @@ import com.example.ticket4u.internal.interceptor.LoggerInterceptor;
 public class LoggingConfig implements WebMvcConfigurer {
     @Autowired
     private LoggerInterceptor loggingInterceptor;
+
     @Autowired
     private AuthInterceptor authInterceptor;
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(loggingInterceptor).addPathPatterns("/**");

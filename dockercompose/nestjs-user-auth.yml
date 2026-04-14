@@ -1,0 +1,44 @@
+services:
+  nestjs-user-auth-v2:
+    build:
+      context: ../nestjs-user-auth
+      dockerfile: Dockerfile
+    container_name: nestjs-user-auth-v2
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_HOST=auth-mysql-v2
+      - DATABASE_PORT=3306
+      - DATABASE_USERNAME=root
+      - DATABASE_PASSWORD=shopdev
+      - DATABASE_NAME=ticket4u_auth
+      - REDIS_HOSTNAME=auth-redis-v2
+      - REDIS_PORT=6379
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://host.docker.internal:8761/eureka/
+      - EUREKA_INSTANCE_IP_ADDRESS=host.docker.internal
+      - PORT=3000
+    depends_on:
+      auth-mysql-v2:
+        condition: service_healthy
+      auth-redis-v2:
+        condition: service_started
+
+  auth-mysql-v2:
+    image: mysql:8.0
+    container_name: auth-mysql-v2
+    environment:
+      - MYSQL_ROOT_PASSWORD=shopdev
+      - MYSQL_DATABASE=ticket4u_auth
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth-redis-v2:
+    image: redis:alpine
+    container_name: auth-redis-v2
+    ports:
+      - "6380:6379"

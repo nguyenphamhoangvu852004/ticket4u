@@ -11,4 +11,5 @@ import com.example.ticket4u.internal.orderItem.infrastructure.jpa.model.OrderIte
 public interface OrderItemJPARepository extends JpaRepository<OrderItemModelSchema,String> {
     @Query("SELECT o FROM order_details o WHERE o.orderId = :orderId")
     List<OrderItemModelSchema> getOrderItemsByOrderId(@Param("orderId") String orderId);
+
 }

@@ -18,10 +18,6 @@ async function bootstrap() {
   app.use(cookieParser());
   app.setGlobalPrefix('api/v1/2025');
   app.useGlobalPipes(new ValidationPipe());
-  app.enableCors({
-    origin: '*',
-    methods: 'GET,PUT,PATCH,POST,DELETE',
-  });
   app.useGlobalFilters(new GlobalExceptionFilter());
   app.useGlobalInterceptors(new RequestLoggingInterceptor());
 

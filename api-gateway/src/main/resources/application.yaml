@@ -19,12 +19,19 @@ spring:
       discovery:
         locator:
           enabled: false
-#      default-filters:
-#        - name: RequestRateLimiter
-#          args:
-#            redis-rate-limiter.replenishRate: 1
-#            redis-rate-limiter.burstCapacity: 1
-#            key-resolver: "#{@ipKeyResolver}"
+      #      default-filters:
+      #        - name: RequestRateLimiter
+      #          args:
+      #            redis-rate-limiter.replenishRate: 1
+      #            redis-rate-limiter.burstCapacity: 1
+      #            key-resolver: "#{@ipKeyResolver}"
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true
       routes:
         # Swagger UI Routes (Giữ nguyên)
         - id: auth-swagger
@@ -47,25 +54,25 @@ spring:
           uri: lb://AUTH-USER-SERVICE
           predicates:
             - Path=/api/v1/2025/auth/**
-#          filters:
-#            - name: RequestRateLimiter
-#              args:
-#                redis-rate-limiter.replenishRate: 5   # Chỉ cho 5 login/s
-#                redis-rate-limiter.burstCapacity: 10
-#                key-resolver: "#{@ipKeyResolver}"
+        #          filters:
+        #            - name: RequestRateLimiter
+        #              args:
+        #                redis-rate-limiter.replenishRate: 5   # Chỉ cho 5 login/s
+        #                redis-rate-limiter.burstCapacity: 10
+        #                key-resolver: "#{@ipKeyResolver}"
         # Các route khác sẽ tự động ăn theo "default-filters" ở trên
         # Không cần paste config vào từng cái nữa -> File gọn hơn hẳn.
         - id: event-route
           uri: lb://EVENT-TICKET-SERVICE
           predicates:
             - Path=/api/v1/2025/events/**
-#          filters:
-#            - name: RequestRateLimiter
-#              args:
-#                redis-rate-limiter.replenishRate: 2
-#                redis-rate-limiter.burstCapacity: 2
-#                # Chú ý: Tên bean phải khớp với tên hàm @Bean ở Bước 2
-#                key-resolver: "#{@ipKeyResolver}"
+        #          filters:
+        #            - name: RequestRateLimiter
+        #              args:
+        #                redis-rate-limiter.replenishRate: 2
+        #                redis-rate-limiter.burstCapacity: 2
+        #                # Chú ý: Tên bean phải khớp với tên hàm @Bean ở Bước 2
+        #                key-resolver: "#{@ipKeyResolver}"
         - id: category-route
           uri: lb://EVENT-TICKET-SERVICE
           predicates:
@@ -128,10 +135,14 @@ eureka:
 #       host: redis-api-gateway-container
 #       port: 6379
 #   cloud:
-#     gateway:
-#       discovery:
-#         locator:
-#           enabled: false
+#      globalcors:
+#        corsConfigurations:
+#          /**:
+#            allowedOriginPatterns: "*"
+#       gateway:
+#         discovery:
+#           locator:
+#             enabled: false
 #       #      default-filters:
 #       #        - name: RequestRateLimiter
 #       #          args:
@@ -167,7 +178,6 @@ eureka:
 #           uri: lb://EVENT-TICKET-SERVICE
 #           predicates:
 #             - Path=/api/v1/2025/events/**, /api/v1/2025/categories/**, /api/v1/2025/tickets/**, /api/v1/2025/eventTimes/**
-
 
 # springdoc:
 #   swagger-ui:

@@ -45,7 +45,7 @@ Hệ thống gồm các service độc lập, giao tiếp thông qua API Gateway
   - Spring Cloud Gateway
   - Spring Cloud Eureka
   - NestJS
-  - Go
+  - Go Gin
 
 - **Database**
   - MySQL

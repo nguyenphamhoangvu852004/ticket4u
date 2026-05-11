@@ -10,20 +10,6 @@ Hệ thống gồm các service độc lập, giao tiếp thông qua API Gateway
 
 ### Các thành phần chính
 
-- **API Gateway**
-  - Spring Cloud Gateway
-  - Định tuyến request
-
-- **Eureka Server**
-  - Spring Cloud Eureka
-  - Service Discovery cho toàn hệ thống
-
-- **Kafka**
-  - Kafka (Hàng đợi tin nhắn)
-  - Zookeeper (Quản lý Kafka Cluster)
-  - Kafka UI (Giao diện cho Kafka)
-
-
 - **Auth User Service**
   - NestJS
   - Quản lý người dùng, đăng ký / đăng nhập, JWT
@@ -42,18 +28,12 @@ Hệ thống gồm các service độc lập, giao tiếp thông qua API Gateway
 
 - **Backend**
   - Java Spring Boot
-  - Spring Cloud Gateway
-  - Spring Cloud Eureka
   - NestJS
   - Go Gin
 
 - **Database**
   - MySQL
   - Redis
-
-- **Hạ tầng**
-  - Docker
-  - Docker Compose
 
 - **Tài liệu**
   - Swagger

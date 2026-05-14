@@ -16,7 +16,7 @@ Hệ thống gồm các service độc lập, giao tiếp thông qua API Gateway
 
 - **Order Service**
   - Java Spring Boot
-  - Xử lý đặt vé, đơn hàng, thanh toán (logic nghiệp vụ)
+  - Xử lý đặt vé, đơn hàng
 
 - **Event Ticket Service**
   - Go

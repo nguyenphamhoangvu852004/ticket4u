@@ -213,3 +213,4 @@ payments-service/.env.dev
 payments-service/.env.container
 .idea
 frontend
+react-ticket4u-app

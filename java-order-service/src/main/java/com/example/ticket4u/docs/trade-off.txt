@@ -1,0 +1,10 @@
+In Monolithic Architechture, we can have a good data consistency throughout the synchronous Order Product process.
+In this case, we will got a little bit of bas User Experience because of the process is synchronous
+Then We split those serivces by follow up Microservices Architechture,
+This will isolate the service responsiblity, but is it need to be splitted into microservices?
+
+In tradditional Architechture (monolithic) we interact with database, but when we split into microservices, we have to with HTTP before Database.
+
+Think about this, if a usecase need to use 10 API responsed from 10 services. It will make the system really slow responsed, even that might not ensure the data consistency.
+
+Monolithic is still the best choice in the system that need a realy tightly data consistency like a Order system.

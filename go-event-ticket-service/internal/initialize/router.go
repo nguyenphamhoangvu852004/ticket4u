@@ -16,7 +16,8 @@ import (
 	initalizeSearchService "go-event-ticket-service/internal/initialize/search"
 	initalizeTicketService "go-event-ticket-service/internal/initialize/ticket"
 	"go-event-ticket-service/internal/kafka"
-	"go-event-ticket-service/internal/middleware"
+
+	// "go-event-ticket-service/internal/middleware"
 	searchRoutes "go-event-ticket-service/internal/search/presentation/http"
 	ticketRoutes "go-event-ticket-service/internal/tickets/presentation/http"
 
@@ -32,8 +33,7 @@ func InitRouter(db *database.Queries, dbRaw *sql.DB) *gin.Engine {
 	}
 	r := gin.Default()
 
-	// cors middleware config
-	r.Use(middleware.CORSMiddleware())
+	// r.Use(middleware.CORSMiddleware()) // CORS is handled by API Gateway
 
 	r.GET("/ping", func(ctx *gin.Context) {
 		response.SuccessResponse(ctx, "pong")

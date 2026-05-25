@@ -38,8 +38,8 @@ import com.example.ticket4u.internal.orderItem.domain.entity.OrderItem;
 import com.example.ticket4u.internal.orderItem.domain.repositoryInterface.IOrderItemRepository;
 import com.example.ticket4u.pkg.errorCustom.ErrorCustom;
 import com.example.ticket4u.pkg.response.PaginationResponse;
+import com.example.ticket4u.utils.RedisUtils;
 import com.example.ticket4u.utils.TimeUtils;
-import com.example.ticket4u.utils.redis.RedisUtils;
 
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;

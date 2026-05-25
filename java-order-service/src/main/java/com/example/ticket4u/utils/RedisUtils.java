@@ -1,4 +1,4 @@
-package com.example.ticket4u.utils.redis;
+package com.example.ticket4u.utils;
 
 
 import org.springframework.data.redis.core.RedisTemplate;

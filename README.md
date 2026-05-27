@@ -68,5 +68,4 @@ TICKET4U/
 ├── go-event-ticket-service/      # Event & Ticket Service (Go)
 ├── nestjs-user-auth/             # User & Auth Service (NestJS)
 ├── docker-compose.yml
-├── README.md
-└── performance-testing/          # Kết quả benchmark
+└── README.md

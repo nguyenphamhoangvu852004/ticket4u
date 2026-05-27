@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"go-event-ticket-service/internal/tickets/application/dto"
 	"go-event-ticket-service/internal/tickets/application/service"
 	"strings"
@@ -49,8 +50,8 @@ func (h *TicketHandler) GetAllTicketsHandler(ctx *gin.Context) (res interface{},
 	var ids []string
 	if idsStrings == "" {
 		return h.service.GetAllTickets(ctx, &dto.GetTicketsListReq{Page: page})
-	}else{
-		ids = strings.Split(idsStrings,",")
+	} else {
+		ids = strings.Split(idsStrings, ",")
 		return h.service.GetTicketsByIds(ctx, ids)
 	}
 }
@@ -76,7 +77,14 @@ func (h *TicketHandler) RestoreTicketHandler(ctx *gin.Context) (res interface{},
 }
 
 func (h *TicketHandler) UpdateTicketHandler(ctx *gin.Context) (res interface{}, err error) {
-	panic("unimplemented")
+	var reqData dto.UpdateSoldAmountReq
+	if err := ctx.ShouldBindJSON(&reqData); err != nil {
+		return nil, err
+	}
+
+	fmt.Println(reqData)
+
+	return h.service.UpdateSoldAmount(ctx, &reqData)
 }
 
 // @Summary Soft delete ticket

@@ -21,25 +21,17 @@ public class OrderItem extends BaseEntity {
     private int quantity;
     private String orderUuid;
 
-    public boolean isValid(){
-        if (this.quantity <=0){
+    public boolean isValid() {
+        if (this.quantity <= 0) {
             return false;
         }
-        if (this.ticketUuid == null || this.ticketUuid.isEmpty()){
+        if (this.ticketUuid == null || this.ticketUuid.isEmpty()) {
             return false;
         }
-        if (this.orderUuid == null || this.orderUuid.isEmpty()){
+        if (this.orderUuid == null || this.orderUuid.isEmpty()) {
             return false;
         }
         return true;
     }
 
-    public OrderItem clone(){
-        return new OrderItem(
-            this.uuid,
-            this.ticketUuid,
-            this.quantity,
-            this.orderUuid
-        );
-    }
 }

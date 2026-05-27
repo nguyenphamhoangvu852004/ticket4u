@@ -13,8 +13,8 @@ docker-up:
 	$(MAKE) -C nestjs-user-auth docker-up
 	$(MAKE) -C java-order-service docker-up
 	$(MAKE) -C go-event-ticket-service docker-up
-	@echo "Starting Frontend..."
-	$(MAKE) -C frontend docker-up
+# 	@echo "Starting Frontend..."
+# 	$(MAKE) -C frontend docker-up
 
 docker-down:
 	@echo "Shutting down Frontend..."

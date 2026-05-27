@@ -4,7 +4,10 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -39,6 +42,7 @@ import com.example.ticket4u.internal.orderItem.domain.repositoryInterface.IOrder
 import com.example.ticket4u.pkg.errorCustom.ErrorCustom;
 import com.example.ticket4u.pkg.response.PaginationResponse;
 import com.example.ticket4u.utils.RedisUtils;
+import com.example.ticket4u.utils.TicketCacheService;
 import com.example.ticket4u.utils.TimeUtils;
 
 import jakarta.transaction.Transactional;
@@ -56,7 +60,7 @@ public class OrderServiceImpl implements IOrderService {
     private final IPaymentClient paymentClient;
     private final KafkaProducerService kafkaProducerService;
     private final RedisTemplate<String, String> redis;
-    private final RedisUtils redisUtils;
+    private final TicketCacheService ticketCacheService;
 
     @Override
     @Transactional
@@ -224,11 +228,97 @@ public class OrderServiceImpl implements IOrderService {
         kafkaProducerService.sendMessage("order.created", new ProduceCreatedOrderMessage(
                 createReq.getUserId(),
                 createdOrder.getId(),
-                createReq.getOrderItems().stream().map(i -> new Items(i.getTicketUuid(), i.getQuantity())).toList()));
+                createReq.getOrderItems().stream().map(i -> new Items(i.getTicketUuid(),
+                        i.getQuantity())).toList()));
 
         PaymentResponseData resp = paymentClient.getPaymentURL(orderEntity.getId(), String.valueOf(totalAmount));
 
         return new CreateOrderResDTO(createdOrder.getId(), resp.getData().getPayUrl());
+    }
+
+    @Override
+    @Transactional
+    public CreateOrderResDTO createOrderSynchronousWithNoCaching(CreateOrderReqDTO createReq) {
+
+        List<String> listTicketID = new ArrayList<String>();
+        createReq.getOrderItems().forEach(item -> listTicketID.add(item.getTicketUuid()));
+
+        List<TicketData> listTicket = new ArrayList<TicketData>();
+
+        TicketResponseData<List<TicketData>> tickets = productClient.getTicketsByIds(listTicketID);
+        if (tickets.getData() == null || tickets.getData().isEmpty()) {
+            throw new ErrorCustom(400, "Error not found product: " + String.join(",", listTicketID));
+        }
+        listTicket = tickets.getData();
+
+        String orderId = UUID.randomUUID().toString();
+        int createdAt = (int) (System.currentTimeMillis() / 1000L);
+        int modifiedAt = (int) (System.currentTimeMillis() / 1000L);
+        int deletedAt = 0;
+        String deletorId = "";
+        Map<String, TicketData> ticketMap = listTicket.stream()
+                .collect(Collectors.toMap(
+                        TicketData::getId,
+                        Function.identity()));
+        List<OrderItem> orderItems = new ArrayList<>();
+
+        for (var item : createReq.getOrderItems()) {
+            String orderItemId = UUID.randomUUID().toString();
+            TicketData ticket = ticketMap.get(item.getTicketUuid());
+
+            if (ticket == null) {
+                throw new ErrorCustom(
+                        404,
+                        "Ticket not found: " + item.getTicketUuid());
+            }
+
+            if (item.getQuantity() > ticket.getTotalQuantity()) {
+                throw new ErrorCustom(
+                        400,
+                        "Quantity exceeds available stock");
+            }
+
+            OrderItem orderItem = OrderItem.builder()
+                    .uuid(orderItemId)
+                    .ticketUuid(item.getTicketUuid())
+                    .quantity(item.getQuantity())
+                    .orderUuid(orderId)
+                    .createdAt(createdAt)
+                    .creatorId(createReq.getUserId())
+                    .modifiedAt(modifiedAt)
+                    .modifierId(createReq.getUserId())
+                    .deletedAt(deletedAt)
+                    .deletorId(deletorId)
+                    .build();
+
+            System.err.println("[createOrderV1] built orderItem: " + orderItem);
+            orderItems.add(orderItem);
+        }
+
+        OrderEntity orderEntity = OrderEntity.builder()
+                .id(orderId)
+                .status(OrderStatusEnum.PENDING)
+                .userId(createReq.getUserId())
+                .creatorId(createReq.getUserId())
+                .modifierId(createReq.getUserId())
+                .deletorId(deletorId)
+                .createdAt(createdAt)
+                .modifiedAt(modifiedAt)
+                .deletedAt(deletedAt)
+                .build();
+
+        try {
+            OrderEntity createdOrder = this.orderRepo.create(orderEntity);
+            if (createdOrder.getId() == null || createdOrder.getId().isBlank()) {
+                throw new RuntimeException("Create order failed");
+            }
+            this.orderItemRepo.saveAll(orderItems);
+            this.productClient.reduceStock(orderEntity.getId(), orderItems);
+            return new CreateOrderResDTO(createdOrder.getId(), "not today");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     @Override
@@ -447,4 +537,201 @@ public class OrderServiceImpl implements IOrderService {
                 return OrderStatusEnum.PENDING;
         }
     }
+
+    @Override
+    public CreateOrderResDTO createOrderSynchronousWithCaching(CreateOrderReqDTO createReq) {
+        List<String> listTicketID = new ArrayList<String>();
+        createReq.getOrderItems().forEach(item -> listTicketID.add(item.getTicketUuid()));
+
+        List<TicketData> listTicket = new ArrayList<TicketData>();
+
+        List<TicketData> cached = this.ticketCacheService.getTicketsByIds(listTicketID);
+        boolean cacheHitAll = cached != null
+                && cached.stream().map(TicketData::getId).collect(Collectors.toSet())
+                        .containsAll(listTicketID);
+
+        if (cacheHitAll) {
+            listTicket = cached;
+        } else {
+            TicketResponseData<List<TicketData>> tickets = productClient.getTicketsByIds(listTicketID);
+            if (tickets.getData() == null || tickets.getData().isEmpty()) {
+                throw new ErrorCustom(400, "Error not found product: " + String.join(",", listTicketID));
+            }
+            listTicket = tickets.getData();
+            // save cache
+            this.ticketCacheService.saveTickets(listTicket);
+        }
+
+        // 2. build order items
+        String orderId = UUID.randomUUID().toString();
+        int createdAt = (int) (System.currentTimeMillis() / 1000L);
+        int modifiedAt = (int) (System.currentTimeMillis() / 1000L);
+        int deletedAt = 0;
+        String deletorId = "";
+        Map<String, TicketData> ticketMap = listTicket.stream()
+                .collect(Collectors.toMap(
+                        TicketData::getId,
+                        Function.identity()));
+        List<OrderItem> orderItems = new ArrayList<>();
+
+        for (var item : createReq.getOrderItems()) {
+            String orderItemId = UUID.randomUUID().toString();
+            TicketData ticket = ticketMap.get(item.getTicketUuid());
+
+            if (ticket == null) {
+                throw new ErrorCustom(
+                        404,
+                        "Ticket not found: " + item.getTicketUuid());
+            }
+
+            if (item.getQuantity() > ticket.getTotalQuantity()) {
+                throw new ErrorCustom(
+                        400,
+                        "Quantity exceeds available stock");
+            }
+
+            OrderItem orderItem = OrderItem.builder()
+                    .uuid(orderItemId)
+                    .ticketUuid(item.getTicketUuid())
+                    .quantity(item.getQuantity())
+                    .orderUuid(orderId)
+                    .createdAt(createdAt)
+                    .creatorId(createReq.getUserId())
+                    .modifiedAt(modifiedAt)
+                    .modifierId(createReq.getUserId())
+                    .deletedAt(deletedAt)
+                    .deletorId(deletorId)
+                    .build();
+
+            System.err.println("[createOrderV1] built orderItem: " + orderItem);
+            orderItems.add(orderItem);
+        }
+
+        OrderEntity orderEntity = OrderEntity.builder()
+                .id(orderId)
+                .status(OrderStatusEnum.PENDING)
+                .userId(createReq.getUserId())
+                .creatorId(createReq.getUserId())
+                .modifierId(createReq.getUserId())
+                .deletorId(deletorId)
+                .createdAt(createdAt)
+                .modifiedAt(modifiedAt)
+                .deletedAt(deletedAt)
+                .build();
+
+        try {
+            OrderEntity createdOrder = this.orderRepo.create(orderEntity);
+            if (createdOrder.getId() == null || createdOrder.getId().isBlank()) {
+                throw new RuntimeException("Create order failed");
+            }
+            this.orderItemRepo.saveAll(orderItems);
+            this.productClient.reduceStock(orderEntity.getId(), orderItems);
+            return new CreateOrderResDTO(createdOrder.getId(), "not today");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    @Override
+    public CreateOrderResDTO createOrderWithCahingAndKafkaAsynchronous(CreateOrderReqDTO createReq) {
+        List<String> listTicketID = new ArrayList<String>();
+        createReq.getOrderItems().forEach(item -> listTicketID.add(item.getTicketUuid()));
+
+        List<TicketData> listTicket = new ArrayList<TicketData>();
+
+        List<TicketData> cached = this.ticketCacheService.getTicketsByIds(listTicketID);
+        boolean cacheHitAll = cached != null
+                && cached.stream().map(TicketData::getId).collect(Collectors.toSet())
+                        .containsAll(listTicketID);
+
+        if (cacheHitAll) {
+            listTicket = cached;
+        } else {
+            TicketResponseData<List<TicketData>> tickets = productClient.getTicketsByIds(listTicketID);
+            if (tickets.getData() == null || tickets.getData().isEmpty()) {
+                throw new ErrorCustom(400, "Error not found product: " + String.join(",", listTicketID));
+            }
+            listTicket = tickets.getData();
+            // save cache
+            this.ticketCacheService.saveTickets(listTicket);
+        }
+
+        // 2. build order items
+        String orderId = UUID.randomUUID().toString();
+        int createdAt = (int) (System.currentTimeMillis() / 1000L);
+        int modifiedAt = (int) (System.currentTimeMillis() / 1000L);
+        int deletedAt = 0;
+        String deletorId = "";
+        Map<String, TicketData> ticketMap = listTicket.stream()
+                .collect(Collectors.toMap(
+                        TicketData::getId,
+                        Function.identity()));
+        List<OrderItem> orderItems = new ArrayList<>();
+
+        for (var item : createReq.getOrderItems()) {
+            String orderItemId = UUID.randomUUID().toString();
+            TicketData ticket = ticketMap.get(item.getTicketUuid());
+
+            if (ticket == null) {
+                throw new ErrorCustom(
+                        404,
+                        "Ticket not found: " + item.getTicketUuid());
+            }
+
+            if (item.getQuantity() > ticket.getTotalQuantity()) {
+                throw new ErrorCustom(
+                        400,
+                        "Quantity exceeds available stock");
+            }
+
+            OrderItem orderItem = OrderItem.builder()
+                    .uuid(orderItemId)
+                    .ticketUuid(item.getTicketUuid())
+                    .quantity(item.getQuantity())
+                    .orderUuid(orderId)
+                    .createdAt(createdAt)
+                    .creatorId(createReq.getUserId())
+                    .modifiedAt(modifiedAt)
+                    .modifierId(createReq.getUserId())
+                    .deletedAt(deletedAt)
+                    .deletorId(deletorId)
+                    .build();
+
+            System.err.println("[createOrderV1] built orderItem: " + orderItem);
+            orderItems.add(orderItem);
+        }
+
+        OrderEntity orderEntity = OrderEntity.builder()
+                .id(orderId)
+                .status(OrderStatusEnum.PENDING)
+                .userId(createReq.getUserId())
+                .creatorId(createReq.getUserId())
+                .modifierId(createReq.getUserId())
+                .deletorId(deletorId)
+                .createdAt(createdAt)
+                .modifiedAt(modifiedAt)
+                .deletedAt(deletedAt)
+                .build();
+
+        try {
+            OrderEntity createdOrder = this.orderRepo.create(orderEntity);
+            if (createdOrder.getId() == null || createdOrder.getId().isBlank()) {
+                throw new RuntimeException("Create order failed");
+            }
+
+            this.orderItemRepo.saveAll(orderItems);
+
+            this.kafkaProducerService.sendMessage("order.created", new ProduceCreatedOrderMessage(
+                    createReq.getUserId(),
+                    createdOrder.getId(),
+                    createReq.getOrderItems().stream().map(i -> new Items(i.getTicketUuid(),
+                            i.getQuantity())).toList()));
+            return new CreateOrderResDTO(createdOrder.getId(), "not today");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
 }

@@ -11,7 +11,7 @@ import io.swagger.v3.oas.annotations.info.Info;
 
 @OpenAPIDefinition(info = @Info(title = "Order Service API", version = "1.0.0", description = "API managements for Order Service", contact = @Contact(name = "Nguyễn Vũ", email = "nguyenvu@example.com")))
 @SpringBootApplication()
-// @EnableKafka
+@EnableKafka
 // @EnableDiscoveryClient
 public class Ticket4uApplication {
 

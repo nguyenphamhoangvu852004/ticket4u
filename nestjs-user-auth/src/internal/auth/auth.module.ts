@@ -4,9 +4,10 @@ import { AuthHandler } from '@/internal/auth/presentation/auth.handler';
 import { AuthHttp } from '@/internal/auth/presentation/auth.http';
 import { UserRepositoryImplementation } from '@/internal/user/infrastructure/repositoryImpl/user.repository.implementation';
 import { Module } from '@nestjs/common';
+import { OAuthHttp } from './presentation/oauth.http';
 @Module({
   imports: [],
-  controllers: [AuthHttp],
+  controllers: [AuthHttp, OAuthHttp],
   providers: [
     {
       provide: 'AuthRepository',

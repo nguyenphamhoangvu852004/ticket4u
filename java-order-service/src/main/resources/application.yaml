@@ -20,8 +20,10 @@ server:
 spring:
     data:
         redis:
-            host: order-redis
-            port: 6379
+            # host: order-redis
+            # port: 6379
+            host: localhost
+            port: 6304
     application:
         name: order-service
     jackson:
@@ -29,8 +31,8 @@ spring:
     datasource:
         hikari:
             maximum-pool-size: 100
-        url: jdbc:mysql://order-mysql:3306/ticket4u_test
-        # url: jdbc:mysql://localhost:3301/ticket4u_test
+        # url: jdbc:mysql://order-mysql:3306/ticket4u_test
+        url: jdbc:mysql://localhost:3301/ticket4u_test
         username: root
         password: shopdev
         driver-class-name: com.mysql.cj.jdbc.Driver
@@ -44,7 +46,9 @@ spring:
     kafka:
         listener:
             ack-mode: manual
-        bootstrap-servers: kafka-kafka-1-1:9092
+        # bootstrap-servers: kafka-kafka-1-1:9092
+        bootstrap-servers: localhost:29092
+
         producer:
             key-serializer: org.apache.kafka.common.serialization.StringSerializer
             value-serializer: org.springframework.kafka.support.serializer.JsonSerializer

@@ -2,6 +2,7 @@
 
 Hệ thống **microservices đặt vé sự kiện**, được thiết kế theo kiến trúc phân tán, dễ mở rộng và triển khai bằng Docker.
 
+Performance testing document: https://docs.google.com/document/d/1CinwjW4ZRdG4ohZu966hsoZjUtjJJSFFvDfGCilQaSg/edit?tab=t.0
 ---
 
 ## Tổng quan kiến trúc

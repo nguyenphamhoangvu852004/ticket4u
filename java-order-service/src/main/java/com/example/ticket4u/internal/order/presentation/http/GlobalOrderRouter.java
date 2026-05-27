@@ -8,27 +8,19 @@ import com.example.ticket4u.internal.order.application.dto.create.CreateOrderReq
 import com.example.ticket4u.internal.order.application.dto.create.CreateOrderResDTO;
 import com.example.ticket4u.internal.order.application.dto.delete.SoftDeleteOrderReqDTO;
 import com.example.ticket4u.internal.order.application.dto.delete.SoftDeleteOrderResDTO;
-import com.example.ticket4u.internal.order.application.dto.get.GetListOrderReqDto;
-import com.example.ticket4u.internal.order.application.dto.get.GetListOrderResDto;
 import com.example.ticket4u.internal.order.application.dto.get.GetOrderByIDReqDto;
 import com.example.ticket4u.internal.order.application.dto.get.GetOrderByIDResDto;
-import com.example.ticket4u.internal.order.application.dto.update.UpdateStatusOrderReqDTO;
-import com.example.ticket4u.internal.order.application.dto.update.UpdateStatusOrderResDTO;
 import com.example.ticket4u.pkg.response.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
-import jakarta.servlet.annotation.HttpConstraint;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 import java.util.UUID;
 
-import org.hibernate.annotations.Filter;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -72,6 +64,18 @@ public class GlobalOrderRouter {
 
         }
         ApiResponse<CreateOrderResDTO> response = orderHandler.createOrderHandler(reqDto);
+        return ResponseEntity.status(response.getCode()).body(response);
+    }
+
+    @Operation(summary = "Create new order 3 version")
+    // @RequireLogin
+    @PostMapping("/performance")
+    public ResponseEntity<ApiResponse<CreateOrderResDTO>> createOrderPerformance(HttpServletRequest httpRequest,
+            @RequestBody CreateOrderReqDTO body,@RequestParam("version") String version) {
+        CreateOrderReqDTO reqDto = new CreateOrderReqDTO();
+        reqDto.setUserId("Userxxxx");
+        reqDto.setOrderItems(body.getOrderItems());
+        ApiResponse<CreateOrderResDTO> response = orderHandler.createOrderHandlerPerfomance(version,reqDto);
         return ResponseEntity.status(response.getCode()).body(response);
     }
 

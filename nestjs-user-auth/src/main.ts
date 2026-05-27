@@ -22,15 +22,15 @@ async function bootstrap() {
   app.useGlobalInterceptors(new RequestLoggingInterceptor());
 
   // MySQL
-  MysqlDatasource.getInstance().connect();
+  // MysqlDatasource.getInstance().connect();
   // Redis
-  RedisDatasource.getInstance().connect();
+  // RedisDatasource.getInstance().connect();
   // Swagger
-  SwaggerConfig.getInstance(app).setup();
+  // SwaggerConfig.getInstance(app).setup();
   // Mailer
-  NodeMailerImplementation.getInstance();
+  // NodeMailerImplementation.getInstance();
 
-  startEurekaClient();
+  // startEurekaClient();
 
   // Khi app chuẩn bị tắt
   process.on('SIGINT', async () => {

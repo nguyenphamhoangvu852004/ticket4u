@@ -17,7 +17,7 @@ func RegisterTicketRoutes(rg *gin.RouterGroup, handler *TicketHandler) {
 	{
 		ticket.GET("", response.Wrap(handler.GetAllTicketsHandler))
 		ticket.GET("/:ticketId", response.Wrap(handler.GetTicketByIDHandler))
-		ticket.PATCH("/:ticketId", response.Wrap(handler.UpdateTicketHandler))
+		ticket.PUT("", response.Wrap(handler.UpdateTicketHandler))
 		ticket.DELETE("/:ticketId", response.Wrap(handler.SoftDeleteTicketHandler))
 		ticket.PATCH("/:ticketId/restore", response.Wrap(handler.RestoreTicketHandler))
 	}

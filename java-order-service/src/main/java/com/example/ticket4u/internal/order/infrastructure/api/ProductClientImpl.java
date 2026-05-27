@@ -1,16 +1,22 @@
 package com.example.ticket4u.internal.order.infrastructure.api;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.example.ticket4u.internal.order.domain.repositoryInterface.IProductClient;
 import com.example.ticket4u.internal.order.infrastructure.api.dto.TicketData;
 import com.example.ticket4u.internal.order.infrastructure.api.dto.TicketResponseData;
+import com.example.ticket4u.internal.order.infrastructure.api.dto.requestDTO.ReduceStockReqDTO;
+import com.example.ticket4u.internal.order.infrastructure.api.dto.requestDTO.ReduceStockTicketDTO;
+import com.example.ticket4u.internal.orderItem.domain.entity.OrderItem;
 import com.example.ticket4u.pkg.errorCustom.ErrorCustom;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.el.ListELResolver;
 import reactor.core.publisher.Mono;
@@ -23,8 +29,12 @@ public class ProductClientImpl implements IProductClient {
                         WebClient.Builder builder,
                         @Value("${app.product-url}") String baseUrl) {
 
+                // this.webClient = builder
+                // .baseUrl(baseUrl + "/tickets")
+                // .build();
+
                 this.webClient = builder
-                                .baseUrl(baseUrl + "/tickets")
+                                .baseUrl("http://localhost:8085/api/v1/2025" + "/tickets")
                                 .build();
         }
 
@@ -99,5 +109,49 @@ public class ProductClientImpl implements IProductClient {
                 }
 
                 return resDto;
+        }
+
+        @Override
+        public void reduceStock(String orderId, List<OrderItem> items) {
+
+                try {
+
+                        ReduceStockReqDTO body = ReduceStockReqDTO.builder()
+                                        .orderId(orderId)
+                                        .tickets(
+                                                        items.stream()
+                                                                        .map(item -> ReduceStockTicketDTO.builder()
+                                                                                        .ticketId(item.getTicketUuid())
+                                                                                        .amount(item.getQuantity())
+                                                                                        .build())
+                                                                        .toList())
+                                        .build();
+
+                        ObjectMapper mapper = new ObjectMapper();
+
+                        String json = mapper.writeValueAsString(body);
+
+                        System.out.println("REQUEST BODY:");
+                        System.out.println(json);
+
+                        String response = this.webClient.put()
+                                        .uri("")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .bodyValue(body)
+                                        .exchangeToMono(clientResponse -> {
+
+                                                System.out.println(
+                                                                "STATUS: " + clientResponse.statusCode());
+
+                                                return clientResponse.bodyToMono(String.class);
+                                        })
+                                        .block();
+
+                        System.out.println("RESPONSE:");
+                        System.out.println(response);
+
+                } catch (Throwable e) {
+                        e.printStackTrace();
+                }
         }
 }

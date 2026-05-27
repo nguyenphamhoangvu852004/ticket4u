@@ -34,14 +34,34 @@ public class GlobalOrderHandler {
         }
     }
 
+    public ApiResponse createOrderHandlerPerfomance(String version, CreateOrderReqDTO reqDto) {
+        try {
+            CreateOrderResDTO resDto = null;
+            switch (version) {
+                case "1":
+                    resDto = this.orderService.createOrderSynchronousWithNoCaching(reqDto);
+                    break;
+                case "2":
+                    resDto = this.orderService.createOrderSynchronousWithCaching(reqDto);
+                    break;
+                case "3":
+                    resDto = this.orderService.createOrderWithCahingAndKafkaAsynchronous(reqDto);
+                    break;
+            }
+            return ApiResponse.success(resDto);
+        } catch (Exception e) {
+            return ApiResponse.error(500, "Internal Server Error", e.getMessage());
+        }
+    }
+
     public ApiResponse getOrderByIDHandler(GetOrderByIDReqDto reqDto) {
         try {
             GetOrderByIDResDto resDto = this.orderService.getOrderById(reqDto);
             return ApiResponse.success(resDto);
         } catch (Exception e) {
-            if (e instanceof ErrorCustom){
+            if (e instanceof ErrorCustom) {
                 return ApiResponse.error(((ErrorCustom) e).getCode(), e.getMessage(), e.getMessage());
-            }else{
+            } else {
                 return ApiResponse.error(500, "Internal Server Error", e.getMessage());
             }
         }
@@ -56,13 +76,15 @@ public class GlobalOrderHandler {
         }
     }
 
-    // public ApiResponse updateStatusOrderHandler(UpdateStatusOrderReqDTO reqDto, String orderId) {
-    //     try {
-    //         UpdateStatusOrderResDTO resDto = orderService.updateStatusOrder(reqDto, orderId);
-    //         return ApiResponse.success(resDto);
-    //     } catch (Exception e) {
-    //         return ApiResponse.error(500, "Internal Server Error", e.getMessage());
-    //     }
+    // public ApiResponse updateStatusOrderHandler(UpdateStatusOrderReqDTO reqDto,
+    // String orderId) {
+    // try {
+    // UpdateStatusOrderResDTO resDto = orderService.updateStatusOrder(reqDto,
+    // orderId);
+    // return ApiResponse.success(resDto);
+    // } catch (Exception e) {
+    // return ApiResponse.error(500, "Internal Server Error", e.getMessage());
+    // }
     // }
 
     public ApiResponse softDeleteOrderHandler(SoftDeleteOrderReqDTO reqDto, String orderId) {

@@ -15,14 +15,20 @@ import com.example.ticket4u.internal.order.application.dto.update.UpdateStatusOr
 public interface IOrderService {
     public CreateOrderResDTO createOrder(CreateOrderReqDTO createReq);
 
+    public CreateOrderResDTO createOrderSynchronousWithNoCaching(CreateOrderReqDTO createReq);
+
+    public CreateOrderResDTO createOrderSynchronousWithCaching(CreateOrderReqDTO createReq);
+
+    public CreateOrderResDTO createOrderWithCahingAndKafkaAsynchronous(CreateOrderReqDTO createReq);
+
     public GetListOrderResDto getListOrder(GetListOrderReqDto getListOrderReqDto);
 
-    public GetOrderByIDResDto getOrderById(GetOrderByIDReqDto getListOrderReqDto) ;
+    public GetOrderByIDResDto getOrderById(GetOrderByIDReqDto getListOrderReqDto);
 
-    public GetListOrderResDto getListOrderByUser(GetListOrderByUserReqDto getListOrderReqDto) ;
+    public GetListOrderResDto getListOrderByUser(GetListOrderByUserReqDto getListOrderReqDto);
 
     public UpdateStatusOrderResDTO updateStatusOrder(UpdateStatusOrderReqDTO reqDto);
 
-    public  SoftDeleteOrderResDTO softDeleteOrder(SoftDeleteOrderReqDTO reqDto, String orderId);
+    public SoftDeleteOrderResDTO softDeleteOrder(SoftDeleteOrderReqDTO reqDto, String orderId);
 
 }

@@ -15,6 +15,33 @@ type ticketRepository struct {
 	db *database.Queries
 }
 
+// GetTicketsByIDs implements [repository.TicketRepository].
+func (t *ticketRepository) GetTicketsByIDs(ctx context.Context, params []string) ([]entity.TicketEntity, error) {
+	listData, err := t.db.GetTicketsByIds(ctx, params)
+	if err != nil {
+		return []entity.TicketEntity{}, fmt.Errorf("get list failed")
+	}
+	var res []entity.TicketEntity
+	for _, item := range listData {
+		res = append(res, entity.TicketEntity{
+			ID:            item.ID,
+			Title:         item.Title,
+			Price:         item.Price,
+			Status:        toEntityStatus(item.Status),
+			TotalQuantity: uint64(item.TotalQuantity),
+			SoldQuantity:  uint64(item.SoldQuantity),
+			BaseEntity: common.BaseEntity{
+				CreatorID:  item.CreatorID,
+				CreatedAt:  item.CreatedAt,
+				ModifierID: item.ModifierID,
+				ModifiedAt: item.ModifiedAt,
+				DeletorID:  item.DeletorID,
+				DeletedAt:  item.DeletedAt},
+		})
+	}
+	return res, nil
+}
+
 // UpdateAmount implements repository.TicketRepository.
 func (t *ticketRepository) UpdateAmount(ctx context.Context, entity *entity.TicketEntity) (int, error) {
 	fmt.Println("So tuong total", entity.TotalQuantity)

@@ -9,6 +9,8 @@ go-event-ticket-service/data/
 **/mysql_data/
 **/*.sock
 
+nestjs-order-service/
+
 
 
 

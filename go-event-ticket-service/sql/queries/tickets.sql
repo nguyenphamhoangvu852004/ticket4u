@@ -98,3 +98,22 @@ set
 	s.modifier_id = ?
 where
 	s.id = ?;
+
+-- name: GetTicketsByIds :many
+select
+	t.id,
+	t.title,
+	t.price,
+	t.status,
+	t.total_quantity,
+	t.sold_quantity,
+	t.creator_id,
+	t.modifier_id,
+	t.deletor_id,
+	t.created_at,
+	t.modified_at,
+	t.deleted_at,
+	t.event_time_id
+from
+	tickets t
+WHERE t.id IN (sqlc.slice('ticket_ids'));

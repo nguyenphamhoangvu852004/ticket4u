@@ -32,14 +32,14 @@ func (t *ticketService) GetTicketsByIds(ctx context.Context, ids []string) ([]*d
 
 	var outputDto []*dto.GetTicketByIDRes
 
-	for i := 0; i < len(ids); i++ {
-		entity, err := t.ticketRepo.GetTicketByID(ctx, ids[i])
-		if err != nil {
-			return nil, response.NewAPIError(
-				http.StatusInternalServerError,
-				http.StatusText(http.StatusInternalServerError),
-				map[string]string{"error": err.Error()})
-		}
+	entities, err := t.ticketRepo.GetTicketsByIDs(ctx, ids)
+	if err != nil {
+		return nil, response.NewAPIError(
+			http.StatusInternalServerError,
+			http.StatusText(http.StatusInternalServerError),
+			map[string]string{"error": err.Error()})
+	}
+	for _, entity := range entities {
 		newOutput := &dto.GetTicketByIDRes{
 			ID:            entity.ID,
 			Title:         entity.Title,

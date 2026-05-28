@@ -15,6 +15,7 @@ type TicketRepository interface {
 	// GetEventByID(ctx context.Context, id string) (*entity.EventEntity, error)
 	GetAllTickets(ctx context.Context, params *params.GetTicketsParams) ([]entity.TicketEntity, error)
 	GetListTicketsByEventTimeID(ctx context.Context, params *params.GetTicketsParams) ([]entity.TicketEntity, error)
+	GetTicketsByIDs(ctx context.Context, params []string) ([]entity.TicketEntity, error)
 	GetTicketByID(ctx context.Context, id string) (*entity.TicketEntity, error)
 	// Create
 	Create(ctx context.Context, entity *entity.TicketEntity) (*entity.TicketEntity, error)

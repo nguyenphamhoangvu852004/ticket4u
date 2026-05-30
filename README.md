@@ -1,63 +1,70 @@
 # 🎟️ TICKET4U
 
-**Hệ thống microservices đặt vé sự kiện** hiện đại, được thiết kế theo kiến trúc phân tán, dễ mở rộng và triển khai bằng Docker.
+**A modern event ticket booking microservices system**, designed with a distributed architecture for scalability and containerized deployment using Docker.
 
-**[📊 Performance Testing Report](https://docs.google.com/document/d/1CinwjW4ZRdG4ohZu966hsoZjUtjJJSFFvDfGCilQaSg/edit?tab=t.0)**
-
----
-
-## 🌟 Giới thiệu
-
-Ticket4U là dự án **microservices** mô phỏng nền tảng bán vé concert trực tuyến. Hệ thống được xây dựng với mục tiêu **high concurrency**, **scalability** và **fault tolerance**, áp dụng các công nghệ và best practices phổ biến trong ngành.
+**Performance Testing Report:** https://docs.google.com/document/d/1CinwjW4ZRdG4ohZu966hsoZjUtjJJSFFvDfGCilQaSg/edit?tab=t.0
 
 ---
 
-## 🏗️ Tổng quan kiến trúc
+## 🌟 Introduction
 
-Hệ thống được thiết kế theo kiến trúc **Microservices** với:
-- **API Gateway** làm điểm vào duy nhất
-- **Service Discovery** (Eureka)
-- **Event-Driven Architecture** sử dụng **Kafka**
-- **Hybrid Deployment** (Local + Docker)
-
-### Các Service chính
-
-| Service                | Ngôn ngữ / Framework     | Trách nhiệm chính                     |
-|------------------------|--------------------------|---------------------------------------|
-| **API Gateway**        | Spring Cloud Gateway     | Routing, Authentication, Rate Limiting |
-| **Eureka Server**      | Java Spring Boot         | Service Discovery                     |
-| **User & Auth Service**| NestJS (TypeScript)      | Quản lý user, auth, JWT               |
-| **Order Service**      | **Java Spring Boot**     | Xử lý đơn hàng, thanh toán            |
-| **Event Ticket Service**| **Go (Gin)**            | Quản lý sự kiện, vé, inventory        |
+Ticket4U is a **microservices-based** project that simulates an online concert ticketing platform. The system is built with a focus on **high concurrency**, **scalability**, and **fault tolerance**, while applying widely adopted technologies and industry best practices.
 
 ---
 
-## 🛠️ Công nghệ sử dụng
+## 🏗️ Architecture Overview
 
-**Backend**
-- Java Spring Boot
-- NestJS (TypeScript)
-- Go + Gin
+The system follows a **Microservices Architecture** with:
 
-**Database & Caching**
-- MySQL
-- Redis
+* **API Gateway** as the single entry point
+* **Service Discovery** using Eureka
+* **Event-Driven Architecture** powered by Kafka
+* **Hybrid Deployment** (Local + Docker)
 
-**Messaging & Streaming**
-- Apache Kafka
+### Core Services
 
-**Infrastructure**
-- Docker & Docker Compose
-- Eureka Service Discovery
-- Swagger/OpenAPI
-
-**Testing**
-- Apache Bench (Performance)
-- JUnit, Jest
+| Service                  | Language / Framework | Main Responsibility                     |
+| ------------------------ | -------------------- | --------------------------------------- |
+| **API Gateway**          | Spring Cloud Gateway | Routing, Authentication, Rate Limiting  |
+| **Eureka Server**        | Java Spring Boot     | Service Discovery                       |
+| **User & Auth Service**  | NestJS (TypeScript)  | User management, authentication, JWT    |
+| **Order Service**        | Java Spring Boot     | Order processing and payment handling   |
+| **Event Ticket Service** | Go (Gin)             | Event, ticket, and inventory management |
 
 ---
 
-## 📁 Cấu trúc thư mục
+## 🛠️ Technology Stack
+
+### Backend
+
+* Java Spring Boot
+* NestJS (TypeScript)
+* Go + Gin
+
+### Database & Caching
+
+* MySQL
+* Redis
+
+### Messaging & Streaming
+
+* Apache Kafka
+
+### Infrastructure
+
+* Docker & Docker Compose
+* Eureka Service Discovery
+* Swagger/OpenAPI
+
+### Testing
+
+* Apache Bench (Performance Testing)
+* JUnit
+* Jest
+
+---
+
+## 📁 Project Structure
 
 ```bash
 TICKET4U/
@@ -69,3 +76,4 @@ TICKET4U/
 ├── nestjs-user-auth/             # User & Auth Service (NestJS)
 ├── docker-compose.yml
 └── README.md
+```

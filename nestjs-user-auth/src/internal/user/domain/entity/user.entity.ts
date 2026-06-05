@@ -1,5 +1,6 @@
 import { RoleEntity } from '@/internal/auth/domain/entity/role.entity';
 import { BaseEntity } from '@/utils/baseEntity';
+import { UserProfileEntity } from './userProfile.entity';
 
 export class UserEntity extends BaseEntity {
   id: string;
@@ -7,6 +8,7 @@ export class UserEntity extends BaseEntity {
   password: string;
   salt: number;
   roles?: RoleEntity[];
+  profile?: UserProfileEntity;
   loginTime: number;
   logoutTime: number;
   loginIp: string;

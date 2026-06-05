@@ -1,18 +1,19 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { AuthServiceInterface } from '@/internal/auth/application/auth.service.interface';
 import { GetUserBaseReqDto, GetUserBaseResDto, RoleResDto } from '@/internal/auth/application/dto/get.dto';
 import { CanActivate, ExecutionContext, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { GetUserPermissionsByUserIdUseCase } from './application/GetUserPermissionsByUserIdUseCase';
 
 @Injectable()
 export class PermissionGuard implements CanActivate {
-  @Inject('AuthService')
-  private readonly authService: AuthServiceInterface;
-
-  @Inject(Reflector)
-  private readonly reflector: Reflector; // read metadata
+  constructor(
+    @Inject(GetUserPermissionsByUserIdUseCase)
+    private readonly getUserPermissionsByUserId: GetUserPermissionsByUserIdUseCase,
+    @Inject(Reflector)
+    private readonly reflector: Reflector, // read metadata
+  ) {}
 
   async canActivate(context: ExecutionContext) {
     const userContext = context.switchToHttp().getRequest().user;
@@ -22,7 +23,7 @@ export class PermissionGuard implements CanActivate {
     console.log('🚀 ~ PermissionGuard ~ canActivate ~ userContext:', userContext);
 
     // gọi dịch vụ lấy quyền của user từ DB hoặc cache
-    const foundUser: GetUserBaseResDto = await this.authService.getUserPermissionsByUserId(
+    const foundUser: GetUserBaseResDto = await this.getUserPermissionsByUserId.execute(
       new GetUserBaseReqDto(userContext.id),
     );
     if (foundUser.roles.length === 0) {

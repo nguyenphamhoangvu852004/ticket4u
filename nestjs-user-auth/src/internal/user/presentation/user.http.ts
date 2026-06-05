@@ -64,6 +64,19 @@ export class UserHttp {
     return;
   }
 
+  // @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get list user by ids' })
+  @ApiResponseData(GetUserInfoResDto)
+  // @UseGuards(LoginGuard)
+  @Get('/users')
+  async getListUserByIds(@Req() req: Request, @Res() res: Response) {
+    const users = req.query.users as string;
+    const ids: string[] = users.split(',');
+
+    const responseData: ResponseData<UserGetListResDto> = await this.userHandler.getUsersByIDs(ids);
+    res.status(responseData.code).json(responseData);
+    return;
+  }
   // @ApiOperation({ summary: 'Create new user' })
   // @ApiBody({ type: CreateUserReqDto })
   // @ApiResponseData(CreateUserResDto)

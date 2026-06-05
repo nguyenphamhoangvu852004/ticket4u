@@ -43,6 +43,43 @@ export class UserServiceImpl implements UserServiceInterface {
     @Inject('AuthRepository')
     private readonly authRepo: AuthRepositoryInterface,
   ) {}
+  async getListUsersByIdsWithNoNplus1Problem(reqDto: string[]): Promise<UserGetListResDto> {
+    try {
+      const list: UserEntity[] = await this.userRepo.getListUserByIDs(reqDto);
+      const listResDto: GetUserInfoResDto[] = [];
+      for (const user of list) {
+        listResDto.push(
+          new GetUserInfoResDto(
+            user.id,
+            user.account,
+            user.loginTime,
+            user.loginIp,
+            String(user.createdAt),
+            String(user.modifiedAt),
+            new ProfileResDto(
+              user.profile!.account,
+              user.profile!.nickname,
+              user.profile!.avatar,
+              user.profile!.state,
+              user.profile!.mobile,
+              user.profile!.gender,
+              user.profile!.birthday,
+              user.profile!.email,
+              String(user.profile!.createdAt),
+              String(user.profile!.updatedAt),
+            ),
+          ),
+        );
+      }
+      const res: UserGetListResDto = new UserGetListResDto(listResDto);
+      return res;
+    } catch (error) {
+      if (error instanceof ErrorCustom) {
+        throw error;
+      }
+      throw new InternalServerError();
+    }
+  }
   async setRoleToUser(reqData: SetRoleToUserReqDto): Promise<SetRoleToUserResDto> {
     try {
       // tìm cái user với cái id đó

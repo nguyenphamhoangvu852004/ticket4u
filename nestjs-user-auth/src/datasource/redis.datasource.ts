@@ -1,41 +1,97 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-import { logError, logInfo } from '@/libs/winston/logger';
+import { Logger } from '@nestjs/common';
 import { createClient, RedisClientType } from 'redis';
 
 export class RedisDatasource {
   private static instance: RedisDatasource;
+
   public dataSource: RedisClientType;
+
+  private readonly logger = new Logger(RedisDatasource.name);
 
   private constructor() {
     this.dataSource = createClient({
-      url: `redis://${process.env.REDIS_HOSTNAME || 'localhost'}:${process.env.REDIS_PORT || 6303}`,
-    }) as RedisClientType;
+      url: `redis://${process.env.REDIS_HOSTNAME || 'localhost'}:${process.env.REDIS_PORT || 6379}`,
+    });
+
+    // Redis runtime events
+    this.dataSource.on('connect', () => {
+      this.logger.log('Redis connecting...');
+    });
+
+    this.dataSource.on('ready', () => {
+      this.logger.log('Redis ready');
+    });
+
+    this.dataSource.on('reconnecting', () => {
+      this.logger.warn('Redis reconnecting...');
+    });
+
+    this.dataSource.on('error', (error) => {
+      this.logger.error('Redis error', error);
+    });
+
+    this.dataSource.on('end', () => {
+      this.logger.warn('Redis disconnected');
+    });
   }
 
-  public static getInstance(): RedisDatasource {
-    if (!RedisDatasource.instance) {
-      RedisDatasource.instance = new RedisDatasource();
+  static getInstance(): RedisDatasource {
+    if (!this.instance) {
+      this.instance = new RedisDatasource();
     }
-    return RedisDatasource.instance;
+
+    return this.instance;
   }
 
-  public async connect(): Promise<void> {
+  async connect(): Promise<void> {
     try {
+      if (this.dataSource.isReady) {
+        return;
+      }
+
       await this.dataSource.connect();
-      // console.log('Redis connected');
-      logInfo('Redis connected', { isSuscces: this.dataSource.isReady });
-    } catch (err) {
-      // console.error('Redis connect error:', err);
-      logError('Redis connect error:', err);
+
+      // verify actual interaction
+      await this.dataSource.ping();
+
+      this.logger.log('Redis connected');
+    } catch (error) {
+      this.logger.error('Redis connection failed', error instanceof Error ? error.stack : String(error));
+
+      throw error;
     }
   }
-  public async disconnect(): Promise<void> {
+
+  async connectWithRetry(maxRetry = 20, delay = 3000): Promise<void> {
+    let retry = 0;
+
+    while (retry < maxRetry) {
+      try {
+        await this.connect();
+
+        return;
+      } catch (error) {
+        retry++;
+
+        this.logger.error(`Redis retry ${retry}/${maxRetry}`);
+
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+
+    this.logger.error('Redis maximum retry exceeded');
+  }
+
+  async disconnect(): Promise<void> {
     try {
-      await this.dataSource.disconnect();
-      logInfo('Redis disconnected', { isSuccess: true });
-    } catch (err) {
-      console.error('Redis disconnect error:', err);
-      logError('Redis disconnect error:', err);
+      if (this.dataSource.isReady) {
+        await this.dataSource.quit();
+
+        this.logger.log('Redis disconnected');
+      }
+    } catch (error) {
+      this.logger.error('Redis disconnect failed', error instanceof Error ? error.stack : String(error));
     }
   }
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { LoginUserReqDto, LoginUserResDto } from '@/internal/auth/application/dto/login.dto';
 import { RegistrateReqDto, RegistrateResDto } from '@/internal/auth/application/dto/registrate.dto';
 import {
@@ -8,22 +9,14 @@ import { VerifyRegistrateUserReqDto, VerifyRegistrateUserResDto } from '@/intern
 import { AuthHandler } from '@/internal/auth/presentation/auth.handler';
 import { ResponseData } from '@/internal/global/ResponseData';
 import { ApiResponseData } from '@/libs/swagger/swagger.utils';
-import { Body, Controller, ExecutionContext, Get, Patch, Post, Req, Res, SetMetadata, UseGuards } from '@nestjs/common';
+import { Body, Controller, ExecutionContext, Patch, Post, Req, Res } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { SkipThrottle, Throttle } from '@nestjs/throttler';
+import { Throttle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
-import {
-  GetDeviceIPAdressReqDto,
-  GetDeviceIPAdressResDto,
-} from '@/internal/auth/application/dto/getDeviceIPAdress.dto';
-import { DeviceGuard } from '@/internal/auth/device.guard';
-import { PermissionGuard } from '@/internal/auth/permission.guard';
-import { LoginGuard } from '@/internal/auth/login.guard';
-import { ACTORS, RESOURCES } from '@/internal/global/Metadata';
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthHttp {
-  constructor(private readonly authHandler: AuthHandler) { }
+  constructor(private readonly authHandler: AuthHandler) {}
 
   @ApiOperation({ summary: 'Register new user' })
   @ApiBody({ type: RegistrateReqDto })
@@ -74,12 +67,15 @@ export class AuthHttp {
   @ApiResponseData(LoginUserResDto)
   @Post('/login')
   async loginUser(@Req() req: Request, @Res() res: Response, @Body() reqData: LoginUserReqDto) {
-    const responseData: ResponseData<LoginUserResDto> = await this.authHandler.login(reqData);
-    res.status(responseData.code).cookie('refreshToken', (responseData.data as LoginUserResDto).refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-    }).json(responseData);
+    const responseData: ResponseData<LoginUserResDto> = await this.authHandler.loginHandler(reqData);
+    res
+      .status(responseData.code)
+      .cookie('refreshToken', (responseData.data as LoginUserResDto).refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+      })
+      .json(responseData);
     return;
   }
 
@@ -93,20 +89,6 @@ export class AuthHttp {
   //   res.status(200).json({ code: 200, message: 'User deleted successfully' });
   //   return;
   // }
-  @UseGuards(LoginGuard, PermissionGuard, DeviceGuard)
-  @SetMetadata('permissions', ['READ'])
-  @SetMetadata('actors', ACTORS)
-  @SetMetadata('resources', RESOURCES)
-  @Throttle({ device: {} })
-  @SkipThrottle({ registrate: true, verifyOTP: true })
-  @Get('/devices')
-  async getIPAddress(@Req() req: Request, @Res() res: Response) {
-    const responseData: ResponseData<GetDeviceIPAdressResDto> = await this.authHandler.getDeviceIPAddress(
-      new GetDeviceIPAdressReqDto(),
-    );
-    res.status(responseData.code).json(responseData);
-    return;
-  }
 
   @ApiOperation({ summary: 'Refresh access token' })
   @ApiResponseData(LoginUserResDto)
@@ -128,16 +110,19 @@ export class AuthHttp {
     }
 
     // Set new refresh token in cookie and send access token in body
-    res.status(responseData.code).cookie('refreshToken', (responseData.data as LoginUserResDto).refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-    }).json({
-      code: 200,
-      message: 'Token refreshed successfully',
-      data: {
-        token: (responseData.data as LoginUserResDto).token
-      }
-    });
+    res
+      .status(responseData.code)
+      .cookie('refreshToken', (responseData.data as LoginUserResDto).refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+      })
+      .json({
+        code: 200,
+        message: 'Token refreshed successfully',
+        data: {
+          token: (responseData.data as LoginUserResDto).token,
+        },
+      });
   }
 }

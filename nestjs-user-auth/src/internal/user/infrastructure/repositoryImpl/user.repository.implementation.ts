@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { MysqlDatasource } from '@/datasource/mysql.datasource';
+import { MySQLDatasource } from '@/datasource/mysql.datasource';
 import { PermissionsModelSchema } from '@/internal/auth/infrastructure/model/permissions.model';
 import { RolesModelSchema } from '@/internal/auth/infrastructure/model/roles.model';
 import { UserEntity } from '@/internal/user/domain/entity/user.entity';
@@ -21,9 +23,9 @@ export class UserRepositoryImplementation implements UserRepositoryInterface {
   private rolesRepo: Repository<RolesModelSchema>;
   private users: UserEntity[];
   constructor() {
-    this.userProfileRepo = MysqlDatasource.getInstance().dataSource.getRepository(UserProfilesModelChema);
-    this.userRepo = MysqlDatasource.getInstance().dataSource.getRepository(UserModelSchema);
-    this.rolesRepo = MysqlDatasource.getInstance().dataSource.getRepository(RolesModelSchema);
+    this.userProfileRepo = MySQLDatasource.getInstance().dataSource.getRepository(UserProfilesModelChema);
+    this.userRepo = MySQLDatasource.getInstance().dataSource.getRepository(UserModelSchema);
+    this.rolesRepo = MySQLDatasource.getInstance().dataSource.getRepository(RolesModelSchema);
     this.users = [
       new UserEntity({
         id: '1',
@@ -53,6 +55,58 @@ export class UserRepositoryImplementation implements UserRepositoryInterface {
         loginIp: '127.0.0.1',
       }),
     ];
+  }
+  async getListUserByIDs(ids: string[]): Promise<UserEntity[]> {
+    try {
+      const userEntities: UserEntity[] = [];
+      // const userBase: UserModelSchema[] = [];
+      const rows: any[] = await this.userRepo
+        .createQueryBuilder('users')
+        .leftJoinAndSelect('user_profiles', 'profiles', 'profiles.account = users.account')
+        .where('users.id IN (:...ids)', { ids })
+        .getRawMany();
+      console.log(rows);
+      if (rows == null || rows.length === 0) {
+        return [];
+      }
+      for (const row of rows) {
+        const userEntity = new UserEntity({
+          id: row.users_id,
+          account: row.users_account,
+          password: row.users_password,
+          salt: row.users_salt,
+          loginTime: row.users_login_time,
+          logoutTime: row.users_logout_time,
+          loginIp: row.users_login_ip,
+          roles: row.roles,
+          createdAt: row.users_created_at,
+          modifiedAt: row.users_modified_at,
+          deletedAt: row.users_deleted_at,
+          profile: new UserProfileEntity({
+            id: row.profiles_id,
+            account: row.profiles_account,
+            nickname: row.profiles_nickname,
+            avatar: row.profiles_avatar,
+            state: row.profiles_state,
+            mobile: row.profiles_mobile,
+            gender: row.profiles_gender,
+            birthday: row.profiles_birthday,
+            email: row.profiles_email,
+            isAuthenticated: row.profiles_is_authenticated,
+            createdAt: row.profiles_created_at,
+            updatedAt: row.profiles_modified_at,
+            deletedAt: row.profiles_deleted_at,
+          }),
+        });
+        console.log(userEntity);
+        userEntities.push(userEntity);
+      }
+
+      return userEntities;
+    } catch (error) {
+      log(error);
+      throw new ErrorCustom(HttpStatus.INTERNAL_SERVER_ERROR, HttpMessage.INTERNAL_SERVER_ERROR);
+    }
   }
   async getOneByUserId(userId: string): Promise<UserEntity | null> {
     try {
@@ -303,7 +357,7 @@ export class UserRepositoryImplementation implements UserRepositoryInterface {
       if (userProfileModel == null) {
         return null;
       }
-      const roles: RolesModelSchema[] = await MysqlDatasource.getInstance()
+      const roles: RolesModelSchema[] = await MySQLDatasource.getInstance()
         .dataSource.getRepository(RolesModelSchema)
         .find({
           where: {

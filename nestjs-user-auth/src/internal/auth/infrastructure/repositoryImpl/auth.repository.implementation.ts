@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unsafe-enum-comparison */
-import { MysqlDatasource } from '@/datasource/mysql.datasource';
+import { MySQLDatasource } from '@/datasource/mysql.datasource';
 import { PermissionEntity } from '@/internal/auth/domain/entity/permission.entity';
 import { RoleEntity } from '@/internal/auth/domain/entity/role.entity';
 import { UserVerificationsEntity } from '@/internal/auth/domain/entity/userVerifications.entity';
@@ -24,8 +24,8 @@ export class AuthRepositoryImplementation implements AuthRepositoryInterface {
   private userVerifyRepo: Repository<UserVerificationsModelSchema>;
   private userRepo: Repository<UserModelSchema>;
   constructor() {
-    this.userVerifyRepo = MysqlDatasource.getInstance().dataSource.getRepository(UserVerificationsModelSchema);
-    this.userRepo = MysqlDatasource.getInstance().dataSource.getRepository(UserModelSchema);
+    this.userVerifyRepo = MySQLDatasource.getInstance().dataSource.getRepository(UserVerificationsModelSchema);
+    this.userRepo = MySQLDatasource.getInstance().dataSource.getRepository(UserModelSchema);
   }
   async getOneByHashKeyAndOTP(hashKey: string, OTP: string): Promise<UserVerificationsEntity | null> {
     try {
@@ -55,7 +55,7 @@ export class AuthRepositoryImplementation implements AuthRepositoryInterface {
   }
   async getRolesOfUser(userId: string) {
     try {
-      const userRoleDatasource = MysqlDatasource.getInstance().dataSource.query(`
+      const userRoleDatasource = MySQLDatasource.getInstance().dataSource.query(`
         SELECT role_id, user_id FROM user_roles WHERE user_id = '${userId}'
       `);
       log(userRoleDatasource);
@@ -66,7 +66,7 @@ export class AuthRepositoryImplementation implements AuthRepositoryInterface {
       log(`role ids thu được tìm thấy cho userId ${userId}:`, roleIds);
       const rolesEntityFound: any[] = [];
       for (const roleId of roleIds) {
-        const roleDatasource = MysqlDatasource.getInstance().dataSource.getRepository('roles');
+        const roleDatasource = MySQLDatasource.getInstance().dataSource.getRepository('roles');
         const roleEntity = await roleDatasource.find({ where: { id: roleId } });
         rolesEntityFound.push(...roleEntity);
       }
@@ -81,7 +81,7 @@ export class AuthRepositoryImplementation implements AuthRepositoryInterface {
   async removeAllRolesOfUser(userId: string): Promise<number> {
     try {
       // get all roles from userId
-      const datasource = MysqlDatasource.getInstance().dataSource.getRepository('user_roles');
+      const datasource = MySQLDatasource.getInstance().dataSource.getRepository('user_roles');
       const deleteResult = await datasource.delete({ user_id: userId });
       if (deleteResult.affected === 0) {
         return 0;
@@ -97,7 +97,7 @@ export class AuthRepositoryImplementation implements AuthRepositoryInterface {
 
   async getRoles(): Promise<RoleEntity[]> {
     try {
-      const datasource = MysqlDatasource.getInstance().dataSource.getRepository('roles');
+      const datasource = MySQLDatasource.getInstance().dataSource.getRepository('roles');
       const rolesFromDb = await datasource.find({ relations: ['permissions'] });
       const roles: RoleEntity[] = [];
       for (const role of rolesFromDb) {
@@ -165,7 +165,7 @@ export class AuthRepositoryImplementation implements AuthRepositoryInterface {
   }
   async saveRole(userId: string, rolesId: string[]): Promise<number> {
     try {
-      const insertedResult = await MysqlDatasource.getInstance()
+      const insertedResult = await MySQLDatasource.getInstance()
         .dataSource.getRepository('user_roles')
         .insert(
           rolesId.map((id) => ({

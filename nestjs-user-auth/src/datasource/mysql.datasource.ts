@@ -1,132 +1,203 @@
+/* eslint-disable no-useless-catch */
 import { DataSource } from 'typeorm';
-import * as mysql from 'mysql2/promise';
-import { logError, logInfo } from '@/libs/winston/logger';
-import { permissionsMockData, rolesMockData, rolesPermissionsMockData } from '@/mockData/mockData';
-import { UserModelSchema } from '@/internal/user/infrastructure/model/user.model';
-import { Utils } from '@/utils/utils';
+import { Logger } from '@nestjs/common';
 import { v4 as uuid } from 'uuid';
+
+import { permissionsMockData, rolesMockData, rolesPermissionsMockData } from 'mockData/mockData';
+
+import { UserModelSchema } from '@/internal/user/infrastructure/model/user.model';
+
 import { UserProfileGenderEnum, UserProfilesModelChema } from '@/internal/user/infrastructure/model/userProfiles.model';
 
-export class MysqlDatasource {
-  private static instance: MysqlDatasource;
+import { Utils } from '@/utils/utils';
+
+export class MySQLDatasource {
+  private static instance: MySQLDatasource;
+
   public dataSource: DataSource;
+
+  private readonly logger = new Logger(MySQLDatasource.name);
 
   private constructor() {
     this.dataSource = new DataSource({
       type: 'mysql',
-      host: process.env.DB_HOSTNAME || 'localhost',
-      port: Number(process.env.DB_PORT) || 3303,
-      username: process.env.DB_USER || 'root',
-      password: process.env.DB_PASSWORD || 'shopdev',
-      database: process.env.DB_NAME || 'ticket4u_test',
+      host: process.env.DB_HOSTNAME,
+      port: Number(process.env.DB_PORT),
+      username: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+
       entities: [__dirname + '/../**/*.model.{ts,js}', __dirname + '/../libs/typeorm/baseModelSchema.{ts,js}'],
+
       synchronize: process.env.DB_SYNCH === 'true',
+
       logging: process.env.DB_LOGGING === 'true',
     });
   }
 
-  public static getInstance(): MysqlDatasource {
-    if (!MysqlDatasource.instance) {
-      MysqlDatasource.instance = new MysqlDatasource();
+  static getInstance(): MySQLDatasource {
+    if (!this.instance) {
+      this.instance = new MySQLDatasource();
     }
-    return MysqlDatasource.instance;
+
+    return this.instance;
   }
 
   async connect() {
     try {
-      // Tạo DB nếu chưa tồn tại
-      const conn = await mysql.createConnection({
-        host: process.env.DB_HOSTNAME as string,
-        port: Number(process.env.DB_PORT),
-        user: process.env.DB_USER as string,
-        password: process.env.DB_PASSWORD as string,
-      });
-      await conn.query(`CREATE DATABASE IF NOT EXISTS ${process.env.DB_NAME as string}`);
-      await conn.end();
+      if (this.dataSource.isInitialized) {
+        return;
+      }
 
-      // Kết nối TypeORM
       await this.dataSource.initialize();
 
-      const roles = await this.dataSource.getRepository('roles').find();
-      if (roles.length === 0) {
-        await this.dataSource.getRepository('roles').insert(rolesMockData);
+      // Verify actual DB interaction
+      await this.dataSource.query('SELECT 1');
+
+      this.logger.log('MySQL connected');
+    } catch (error) {
+      this.logger.error('DB connection failed', error instanceof Error ? error.stack : String(error));
+
+      throw error;
+    }
+  }
+
+  async initializeData() {
+    try {
+      const rolesRepo = this.dataSource.getRepository('roles');
+
+      const permissionsRepo = this.dataSource.getRepository('permissions');
+
+      const rolePermissionsRepo = this.dataSource.getRepository('role_permissions');
+
+      if (!(await rolesRepo.count())) {
+        await rolesRepo.insert(rolesMockData);
       }
 
-      const permissions = await this.dataSource.getRepository('permissions').find();
-      if (permissions.length === 0) {
-        await this.dataSource.getRepository('permissions').insert(permissionsMockData);
+      if (!(await permissionsRepo.count())) {
+        await permissionsRepo.insert(permissionsMockData);
       }
 
-      // update roles_permissions table
-      const rolesPermissions = await this.dataSource.getRepository('role_permissions').find();
-      if (rolesPermissions.length === 0) {
-        await this.dataSource.getRepository('role_permissions').clear();
-        await this.dataSource.getRepository('role_permissions').insert(rolesPermissionsMockData);
+      if (!(await rolePermissionsRepo.count())) {
+        await rolePermissionsRepo.insert(rolesPermissionsMockData);
       }
 
-      // if not exist ADMIN account then create ADMIN account
-      const adminAccount = await this.dataSource.getRepository(UserModelSchema).findOne({
+      const userRepo = this.dataSource.getRepository(UserModelSchema);
+
+      const admin = await userRepo.findOne({
         where: {
           account: 'admin@gmail.com',
         },
       });
-      if (!adminAccount) {
-        const adminUUID = uuid();
-        // tạo row user
-        await this.dataSource.getRepository(UserModelSchema).insert({
-          id: adminUUID,
+
+      if (!admin) {
+        const adminId = uuid();
+
+        await userRepo.insert({
+          id: adminId,
           account: 'admin@gmail.com',
+
           password: await Utils.hashStringUsingBcryptJS('123456789Admin!', 12),
+
           loginIp: '127.0.0.1',
+
           loginTime: 0,
-          createdAt: new Date().getUTCMilliseconds(),
-          modifiedAt: new Date().getUTCMilliseconds(),
+
+          createdAt: Date.now(),
+
+          modifiedAt: Date.now(),
+
           deletedAt: 0,
-          creatorId: adminUUID,
+
+          creatorId: adminId,
+
+          modifierId: adminId,
+
           deletorId: '',
-          modifierId: adminUUID,
         });
-        // thêm vai trò
-        await this.dataSource.getRepository('user_roles').insert({
-          user_id: adminUUID,
-          role_id: Array.from(rolesMockData).filter((role) => {
-            return role.name === 'ADMIN';
-          })[0].id,
-        });
-        // tạo profile
+
+        const adminRole = rolesMockData.find((x) => x.name === 'ADMIN');
+
+        if (adminRole) {
+          await this.dataSource.getRepository('user_roles').insert({
+            user_id: adminId,
+
+            role_id: adminRole.id,
+          });
+        }
+
         await this.dataSource.getRepository(UserProfilesModelChema).insert({
           id: uuid(),
+
           account: 'admin@gmail.com',
-          avatar: 'testting//....com',
+
+          avatar: '',
+
           birthday: new Date(),
+
           email: 'admin@gmail.com',
+
           gender: UserProfileGenderEnum.FEMALE,
+
           isAuthenticated: 1,
+
           mobile: '0987654321',
+
           nickname: 'admin',
+
           state: 'VN',
-          createdAt: new Date().getUTCMilliseconds(),
-          modifiedAt: new Date().getUTCMilliseconds(),
+
+          createdAt: Date.now(),
+
+          modifiedAt: Date.now(),
+
           deletedAt: 0,
-          creatorId: adminUUID,
+
+          creatorId: adminId,
+
+          modifierId: adminId,
+
           deletorId: '',
-          modifierId: adminUUID,
         });
       }
 
-      logInfo('MySQL connected', { isSuccess: this.dataSource.isInitialized });
-    } catch (err: unknown) {
-      const error = err as Error;
-      logError('DB connect error:', error);
+      this.logger.log('Initial data seeded');
+    } catch (error) {
+      throw error;
     }
+  }
+
+  async connectDatabaseWithRetry(maxRetry = 20, delay = 3000) {
+    let retry = 0;
+
+    while (retry < maxRetry) {
+      try {
+        await this.connect();
+
+        await this.initializeData();
+
+        return;
+      } catch (error) {
+        retry++;
+
+        this.logger.error(`Retry ${retry}/${maxRetry}`);
+
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+
+    this.logger.error('Maximum retry count exceeded');
   }
 
   async disconnect() {
     try {
-      await this.dataSource.destroy();
-      logInfo('MySQL disconnected', { isSuccess: true });
+      if (this.dataSource.isInitialized) {
+        await this.dataSource.destroy();
+
+        this.logger.log('MySQL disconnected');
+      }
     } catch (error) {
-      logError('MySQL disconnected error:', error);
+      this.logger.error('Disconnect failed');
     }
   }
 }

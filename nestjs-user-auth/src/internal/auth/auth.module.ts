@@ -1,10 +1,15 @@
-import { AuthServiceImplementation } from '@/internal/auth/application/auth.service.implementation';
+import { GetUserPermissionsByUserIdUseCase } from '@/internal/auth/application/GetUserPermissionsByUserIdUseCase';
 import { AuthRepositoryImplementation } from '@/internal/auth/infrastructure/repositoryImpl/auth.repository.implementation';
-import { AuthHandler } from '@/internal/auth/presentation/auth.handler';
 import { AuthHttp } from '@/internal/auth/presentation/auth.http';
 import { UserRepositoryImplementation } from '@/internal/user/infrastructure/repositoryImpl/user.repository.implementation';
 import { Module } from '@nestjs/common';
 import { OAuthHttp } from './presentation/oauth.http';
+import { UserLoginUseCase } from './application/UserLoginUseCase';
+import { AuthHandler } from './presentation/auth.handler';
+import { RequestRegistrationOtpUseCase } from './application/RequestRegistrationOtpUseCase';
+import { VerifyRegistrationOtpUseCase } from './application/VerifyRegistrationOtpUseCase';
+import { FinalizeRegistrationUseCase } from './application/FinalizeRegistrationUseCase';
+import { RefreshTokenUseCase } from './application/RefreshTokenUseCase';
 @Module({
   imports: [],
   controllers: [AuthHttp, OAuthHttp],
@@ -17,13 +22,14 @@ import { OAuthHttp } from './presentation/oauth.http';
       provide: 'UserRepository',
       useClass: UserRepositoryImplementation,
     },
-    {
-      provide: 'AuthService',
-      useClass: AuthServiceImplementation,
-    },
-    AuthServiceImplementation,
+    UserLoginUseCase,
+    RequestRegistrationOtpUseCase,
+    VerifyRegistrationOtpUseCase,
+    FinalizeRegistrationUseCase,
+    RefreshTokenUseCase,
+    GetUserPermissionsByUserIdUseCase,
     AuthHandler,
   ],
-  exports: ['AuthService'],
+  exports: [GetUserPermissionsByUserIdUseCase],
 })
 export class AuthModule {}

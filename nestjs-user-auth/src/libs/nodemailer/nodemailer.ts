@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { logInfo } from '@/libs/winston/logger';
+import { Logger } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 
 export class NodeMailerImplementation {
@@ -23,7 +23,7 @@ export class NodeMailerImplementation {
     if (!NodeMailerImplementation.instance) {
       NodeMailerImplementation.instance = new NodeMailerImplementation();
     }
-    logInfo('Nodemailer instance created', { isSuccess: true });
+    Logger.log('Nodemailer instance created', { isSuccess: true });
     return NodeMailerImplementation.instance;
   }
 

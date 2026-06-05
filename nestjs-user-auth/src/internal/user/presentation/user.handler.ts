@@ -118,6 +118,19 @@ export class UserHandler {
     }
   }
 
+  async getUsersByIDs(reqData: string[]): Promise<ResponseData<UserGetListResDto>> {
+    try {
+      const data = await this.userService.getListUsersByIdsWithNoNplus1Problem(reqData);
+      return ResponseData.success(data);
+    } catch (error) {
+      return ResponseData.error(
+        (error as ErrorCustom).statusCode,
+        error.message as string,
+        null as unknown as UserGetListResDto,
+      );
+    }
+  }
+
   async getUserInfo(reqData: GetUserInfoReqDto): Promise<ResponseData<GetUserInfoResDto>> {
     try {
       const data = await this.userService.getUserInfo(reqData);

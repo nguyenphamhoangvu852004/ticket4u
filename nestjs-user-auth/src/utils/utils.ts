@@ -5,15 +5,8 @@ import * as crypto from 'crypto';
 import { RedisDatasource } from '@/datasource/redis.datasource';
 dotenv.config({ path: `${__dirname}/../../dev.env` });
 
-// export class RegistrateNewUserPayload implements jwt.JwtPayload {
-//   email: string;
-//   constructor(email: string) {
-//     this.email = email;
-//   }
-// }
-
 export class Utils {
-  constructor() { }
+  constructor() {}
   public static createSixRandomDigitalNumber(): number {
     return Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
   }
@@ -40,7 +33,6 @@ export class Utils {
         });
         return token;
       }
-
     }
   }
   public static verifyJWTToken<T extends jwt.JwtPayload>(token: string, type: 'registrate' | 'login' | 'refresh'): T {

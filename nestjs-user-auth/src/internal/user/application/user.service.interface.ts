@@ -23,6 +23,7 @@ import {
 
 export interface UserServiceInterface {
   getListUsersAvalable(reqDto: UserGetListReqDto): Promise<UserGetListResDto>;
+  getListUsersByIdsWithNoNplus1Problem(reqDto: string[]): Promise<UserGetListResDto>;
   getUserInfo(reqDto: GetUserInfoReqDto): Promise<GetUserInfoResDto>;
   isExistUser(reqDto: CheckExistUserReqDto): Promise<CheckExistUserReqDto>;
   createUser(reqDto: CreateUserReqDto): Promise<CreateUserResDto>;

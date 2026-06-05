@@ -3,6 +3,7 @@ import { UserProfileEntity } from '@/internal/user/domain/entity/userProfile.ent
 
 export interface UserRepositoryInterface {
   getManyAvalable(): Promise<UserEntity[]>;
+  getListUserByIDs(ids: string[]): Promise<UserEntity[]>;
   getOneUserProfileByAccount(account: string): Promise<UserProfileEntity | null>;
   getOneByUserKey(account: string): Promise<UserEntity | null>;
   getOneByUserId(userId: string): Promise<UserEntity | null>;

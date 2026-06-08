@@ -1,5 +1,4 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { GlobalFooter } from "./components/GlobalFooter";
 import GlobalHeader from "./components/GlobalHeader";
 import Home from "./page/Home";
 import About from "./page/About";
@@ -17,7 +16,7 @@ export default function GlobalLayout() {
             <Route path="/contact" element={<Contact />} />
           </Routes>
         </BrowserRouter>
-        <GlobalFooter></GlobalFooter>
+        {/* <GlobalFooter></GlobalFooter> */}
       </div>
     </>
   );

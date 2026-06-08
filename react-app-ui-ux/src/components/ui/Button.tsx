@@ -6,7 +6,7 @@ export default function Button(props: ButtonProps) {
   return (
     <>
       <button
-         className={`
+        className={`
         flex items-center
         leading-none
         ${props.className ?? ""}

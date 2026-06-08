@@ -15,7 +15,7 @@ export default function SearchBar() {
         placeholder="What are you looking for today?"
         className="w-full h-full outline-none placeholder-gray-500 text-gray-500 bg-transparent text-sm"
       />
-      <button type="submit" className=" text-black">
+      <button type="submit" className=" text-black cursor-pointer">
         Search
       </button>
     </div>

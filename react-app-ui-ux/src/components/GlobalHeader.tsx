@@ -14,12 +14,17 @@ export default function GlobalHeader() {
           <div className="flex gap-[20px] text-[14px]  items-center">
             <Button
               title="Create events"
-              className="flex justify-center rounded-4xl border border-white text-white p-[6px] pl-8 pr-8 min-w-[170px] min-h-[36px] text-[14px] "
+              className="flex justify-center rounded-4xl border border-white text-white p-[6px] pl-8 pr-8 min-w-[170px] min-h-[36px] text-[14px] cursor-pointer 
+              hover:bg-[rgb(255,255,255)] transition-all hover:text-[rgb(0,0,0)] transition-all duration-400
+              "
             ></Button>
 
             <div className="flex items-center gap-[6px]">
               <BsTicketDetailed className="text-white w-[24px] h-[24px]" />
-              <Button title="My ticket" className="text-white"></Button>
+              <Button
+                title="My ticket"
+                className="text-white "
+              ></Button>
             </div>
             <div className="flex items-center gap-[36px]">
               <Button

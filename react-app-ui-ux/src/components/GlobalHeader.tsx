@@ -1,12 +1,12 @@
-import Button from "./ui/Button";
-import Logo from "./ui/Logo";
-import SearchBar from "./ui/SearchBar";
+import Button from "../ui/Button";
+import Logo from "../ui/Logo";
+import SearchBar from "../ui/SearchBar";
 import vietnam from "../assets/vietnam.png";
 import { BsTicketDetailed } from "react-icons/bs";
 export default function GlobalHeader() {
   return (
     <>
-      <div className="flex justify-evenly items-center border-b-2 border-solid h-[76px] pr-30 pl-25 bg-[rgb(45_194_117)]">
+      <div className="flex justify-evenly items-center  border-solid h-[76px] pr-30 pl-25 bg-[rgb(45_194_117)]">
         <Logo></Logo>
 
         <div className="flex items-center gap-[60px]">

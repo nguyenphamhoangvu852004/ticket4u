@@ -7,7 +7,7 @@ export default function Main() {
     <>
       <div className="h-max">
         {/* category bar */}
-        <div className="bg-[rgb(39,39,42)] h-full text-white ">
+        <div className=" h-full text-white ">
           <div className="bg-[rgb(0,0,0)] w-full h-[60px] ">
             <div className=" mr-[276px] ml-[276px] pl-[16px] pr-[16px] h-full ">
               <div

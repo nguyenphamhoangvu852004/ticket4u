@@ -1,22 +1,36 @@
 export interface EventItem {
-  id: string;
-  title: string;
+  id: number;
+  originalId: number;
   imageUrl: string;
-  lowestPrice?: string;
-  date: string;
+  deeplink: string;
+  name?: string;
+  price?: number;
+  day?: string;
+  isNewBookingFlow: boolean;
+  isFree?: boolean;
+  orgLogoUrl?: string;
+  badge?: string | null;
+  url?: string;
+  categories?: string | null;
 }
 
 export interface FeaturedStar {
-  id: string;
   name: string;
-  imageUrl: string;
-  verified: boolean;
+  slug: string;
+  deeplink: string;
+  avatarUrl: string;
+  isVerified: boolean;
 }
 
 export interface Destination {
-  id: string;
-  name: string;
-  imageUrl: string;
+  id: number;
+  code: number;
+  name: {
+    en: string;
+    vi: string;
+  };
+  deeplink: string;
+  image: string;
 }
 
 export interface CategoryLink {

@@ -1,7 +1,23 @@
 import { resaleTickets } from "../data/homeData";
 import EventCard from "../../../ui/EventCard";
+import { useEffect, useState } from "react";
 
 export default function ResaleTickets() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    console.log("currentIndex changed:", currentIndex);
+  }, [currentIndex]);
+
+  const maxIndex = 1;
+
+  function handleClick(command: string) {
+    if (command === ">") {
+      setCurrentIndex(currentIndex + 1);
+    } else if (command === "<") {
+      setCurrentIndex(currentIndex - 1);
+    }
+  }
   return (
     <div className="border-box mx-auto relative h-[298px] mt-[96px] mb-[56px] w-[1248px]">
       <div
@@ -13,19 +29,26 @@ export default function ResaleTickets() {
       />
 
       <div className="relative z-10 flex justify-start gap-[16px] h-full pt-[16px]">
-        <div className="flex justify-center pr-[56px] pl-[56px]">
+        <div className="flex justify-center pr-[56px] pl-[56px] ">
           <img
             src="https://salt.tkbcdn.com/ts/ds/d8/b7/4e/313ff0caab3c8f518be523da266c0fe7.png"
             alt="Resale"
-            className="object-contain"
+            className="object-contain w-[100px] h-[100%]"
           />
         </div>
 
-        <div className="flex flex-row gap-[16px]">
+        <div
+          className="flex flex-row gap-[16px]"
+          style={{
+            overflowX: "auto",
+            cursor: "grab",
+            scrollbarWidth: "none",
+          }}
+        >
           {resaleTickets.map((event, idx) => (
             <div
               key={idx}
-              className="p-[12px] max-w-[304px] rounded-[12px] backdrop-blur bg-[rgba(86,92,106,0.5)]"
+              className="p-[12px] rounded-[12px] backdrop-blur bg-[rgba(86,92,106,0.5)] "
             >
               <EventCard event={event} theme="dark" />
             </div>

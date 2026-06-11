@@ -1,4 +1,3 @@
-
 import type { Destination } from "../types";
 
 interface DestinationCardProps {
@@ -10,8 +9,8 @@ export default function DestinationCard({ destination }: DestinationCardProps) {
     <div className="relative w-[298px] h-[300px] rounded-[12px] overflow-hidden cursor-pointer">
       <img
         className="absolute inset-0 w-full h-full object-cover"
-        src={destination.imageUrl}
-        alt={destination.name}
+        src={destination.image}
+        alt={destination.name.en}
       />
       <div
         className="
@@ -34,7 +33,7 @@ export default function DestinationCard({ destination }: DestinationCardProps) {
           text-[24px]
         "
       >
-        {destination.name}
+        {destination.name.en}
       </div>
     </div>
   );

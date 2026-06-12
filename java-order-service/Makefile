@@ -5,10 +5,12 @@ APP_PORT = 8086
 dev:
 	mvn spring-boot:run
 
+docker-build-up:
+	docker compose -f docker-compose.yml up -d --build
 docker-up:
-	docker compose -f DockerCompose.yaml up -d --build
+	docker compose -f docker-compose.yml up -d
 
 docker-down:
-	docker-compose -f DockerCompose.yaml down -v
+	docker-compose -f docker-compose.yml down -v
 
 

@@ -2,7 +2,6 @@ dev:
 	powershell -Command "$$env:APP_ENV='local'; go run ./cmd/server/main.go"
 
 
-
 docker-build-up:
 	make swagger && docker compose -f docker-compose.yml up -d --build
 

@@ -46,10 +46,6 @@ kafka:
     - "order.created"
     - "order.updated"
 
-eurekaClient:
-  hostname: 
-  port: 8761
-
 cloudinary:
   cloudName: ""
   key: ""

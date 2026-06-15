@@ -41,7 +41,6 @@ import com.ticket4u.kafka.KafkaProducerService;
 import com.ticket4u.pkg.errorCustom.ErrorCustom;
 import com.ticket4u.pkg.response.PaginationResponse;
 import com.ticket4u.service.OrderServiceImpl.ProduceCreatedOrderMessage.Items;
-import com.ticket4u.utils.RedisUtils;
 import com.ticket4u.utils.TicketCacheService;
 import com.ticket4u.utils.TimeUtils;
 

@@ -3,6 +3,7 @@ export interface EventItem {
   originalId: number;
   imageUrl: string;
   deeplink: string;
+  title?: string;
   name?: string;
   price?: number;
   day?: string;
@@ -12,6 +13,7 @@ export interface EventItem {
   badge?: string | null;
   url?: string;
   categories?: string | null;
+  createdAt?: string;
 }
 
 export interface FeaturedStar {

@@ -20,13 +20,13 @@ export default function EventCard({
       >
         <img
           className={`rounded-[12px] object-cover  ${height} ${width}`}
-          src={event.imageUrl}
+          src={"https://placehold.co/600x400"}
           alt={event.name}
         />
       </div>
       <div className="flex flex-col gap-[8px]">
         <div className="itemTitle max-h-[42px] font-bold line-clamp-2">
-          {event.name}
+          {event.title}
         </div>
         {event.price && (
           <div className="itemLowestPrice font-semibold text-[rgb(45,194,117)]">
@@ -37,7 +37,7 @@ export default function EventCard({
           <div className="itemDateIcon w-[16px] h-[17px] font-normal text-sm">
             🗓️
           </div>
-          <div className="itemDateText">{event.day}</div>
+          <div className="itemDateText">{event.createdAt}</div>
         </div>
       </div>
     </div>

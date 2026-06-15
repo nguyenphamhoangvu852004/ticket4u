@@ -1,10 +1,28 @@
-import { useState } from "react";
-import { genericEvents } from "../data/homeData";
+import { useEffect, useState } from "react";
 import EventCard from "../../../ui/EventCard";
+import { BASE_URL_SERVICE } from "../../../constants/api";
 
 export default function TimeFilteredEvents() {
   const [activeTab, setActiveTab] = useState<"weekend" | "month">("weekend");
+  const [listEvents, setListEvents] = useState([]);
 
+  useEffect(() => {
+    if (activeTab === "weekend") {
+      const fetchEvents = async () => {
+        try {
+          const res = await fetch(BASE_URL_SERVICE + "/events");
+          const data = await res.json();
+          console.log(data.data.list);
+          setListEvents(data.data.list);
+        } catch (error) {
+          console.error(error);
+        }
+      };
+      fetchEvents();
+    } else {
+      setListEvents([]);
+    }
+  }, [activeTab]);
   return (
     <div className="mx-auto mt-[56px] mb-[56px] min-h-[298px] w-[1248px]">
       <div className="flex justify-between mb-[16px]">
@@ -19,10 +37,7 @@ export default function TimeFilteredEvents() {
             )}
           </div>
 
-          <div
-            className="cursor-pointer"
-            onClick={() => setActiveTab("month")}
-          >
+          <div className="cursor-pointer" onClick={() => setActiveTab("month")}>
             <p>This month</p>
             {activeTab === "month" && (
               <div className="w-[100%] h-[4px] bg-[rgb(45,194,117)] rounded-[10px]"></div>
@@ -36,7 +51,7 @@ export default function TimeFilteredEvents() {
       </div>
 
       <div className="flex justify-start gap-[16px] w-full h-full">
-        {genericEvents.slice(0, 3).map((event, idx) => (
+        {listEvents.slice(0, 3).map((event, idx) => (
           <EventCard key={idx} event={event} />
         ))}
       </div>

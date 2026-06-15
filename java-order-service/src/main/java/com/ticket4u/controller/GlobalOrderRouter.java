@@ -1,4 +1,4 @@
-package com.ticket4u.presentation.http;
+package com.ticket4u.controller;
 
 import org.springframework.web.bind.annotation.RestController;
 

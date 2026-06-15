@@ -1,25 +1,25 @@
-package com.ticket4u.presentation.http.admin;
+package com.ticket4u.controller.user;
 
 import org.springframework.stereotype.Component;
 
-import com.ticket4u.dto.update.UpdateStatusOrderReqDTO;
-import com.ticket4u.dto.update.UpdateStatusOrderResDTO;
+import com.ticket4u.dto.get.GetListOrderByUserReqDto;
+import com.ticket4u.dto.get.GetListOrderResDto;
 import com.ticket4u.pkg.errorCustom.ErrorCustom;
 import com.ticket4u.pkg.response.ApiResponse;
 import com.ticket4u.service.IOrderService;
 
-@Component("AdminOrderHandlers")
-public class AdminOrderHandler {
+@Component("UserOrderHandlers")
+public class UserOrderHandler {
 
     private final IOrderService orderService;
 
-    public AdminOrderHandler(IOrderService orderService) {
+    public UserOrderHandler(IOrderService orderService) {
         this.orderService = orderService;
     }
 
-    public ApiResponse updateStatusOrderHandler(UpdateStatusOrderReqDTO reqDto) {
+    public ApiResponse getListOrderByUserHandler(GetListOrderByUserReqDto reqDto) {
         try {
-            UpdateStatusOrderResDTO resDto = this.orderService.updateStatusOrder(reqDto);
+            GetListOrderResDto resDto = this.orderService.getListOrderByUser(reqDto);
             return ApiResponse.success(resDto);
         } catch (Exception e) {
             if (e instanceof ErrorCustom) {
@@ -30,5 +30,7 @@ public class AdminOrderHandler {
             }
         }
     }
-    
+
+    // public ApiResponse GetOrderByIDHandler(GetOrderByIDReqDto reqDto) {
+
 }

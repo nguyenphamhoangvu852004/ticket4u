@@ -773,6 +773,7 @@ export const resaleTickets: EventItem[] = [
   {
     id: 25689,
     name: "[Nhà Hát Bến Thành] Hài kịch: Đảo Hoa Hậu",
+    title: "[Nhà Hát Bến Thành] Hài kịch: Đảo Hoa Hậu",
     imageUrl:
       "https://salt.tkbcdn.com/ts/ds/df/73/58/48093f2ebde108ffb8ae51fe702b1fcb.jpg",
     orgLogoUrl:
@@ -790,6 +791,7 @@ export const resaleTickets: EventItem[] = [
   {
     id: 26060,
     name: "'GIỮA MỘT VẠN TOUR' - PHÙNG KHÁNH LINH | CHAPTER 3: LIVE EXPERIENCE IN HÀ NỘI",
+    title: "'GIỮA MỘT VẠN TOUR' - PHÙNG KHÁNH LINH | CHAPTER 3: LIVE EXPERIENCE IN HÀ NỘI",
     imageUrl:
       "https://salt.tkbcdn.com/ts/ds/31/08/08/91679d2bd0ebcae1c7184955ef96d7b8.png",
     orgLogoUrl:
@@ -807,6 +809,7 @@ export const resaleTickets: EventItem[] = [
   {
     id: 25772,
     name: "Mr Siro - Fan Concert - Encore Ai Cũng Giấu Trong Lòng Tảng Băng - HCM",
+    title: "Mr Siro - Fan Concert - Encore Ai Cũng Giấu Trong Lòng Tảng Băng - HCM",
     imageUrl:
       "https://salt.tkbcdn.com/ts/ds/10/f1/b2/a317ce6bb7f43ac5ea637e795d66623c.jpg",
     orgLogoUrl:
@@ -824,6 +827,7 @@ export const resaleTickets: EventItem[] = [
   {
     id: 9100,
     name: "Nhà Hát Kịch IDECAF: TẤM CÁM ĐẠI CHIẾN!",
+    title: "Nhà Hát Kịch IDECAF: TẤM CÁM ĐẠI CHIẾN!",
     imageUrl:
       "https://salt.tkbcdn.com/ts/ds/12/c5/75/d09af12e58cebe049ce432dcf109e26b.jpg",
     orgLogoUrl:
@@ -858,6 +862,7 @@ export const resaleTickets: EventItem[] = [
   {
     id: 24436,
     name: "[Nhà Hát Kịch Thanh Niên] Hài kịch: Nữ Hoàng Giải Trí",
+    title: "[Nhà Hát Kịch Thanh Niên] Hài kịch: Nữ Hoàng Giải Trí",
     imageUrl:
       "https://salt.tkbcdn.com/ts/ds/e8/8b/ce/63f194114700ddefc08d93389daea035.jpg",
     orgLogoUrl:
@@ -875,6 +880,7 @@ export const resaleTickets: EventItem[] = [
   {
     id: 25693,
     name: "[Nhà hát kịch Thanh Niên] Hài kịch: Tung Hoành Pattaya",
+    title: "[Nhà hát kịch Thanh Niên] Hài kịch: Tung Hoành Pattaya",
     imageUrl:
       "https://salt.tkbcdn.com/ts/ds/5d/56/58/c86cf8cf40fbba952fb5c31376e8486b.jpg",
     orgLogoUrl:

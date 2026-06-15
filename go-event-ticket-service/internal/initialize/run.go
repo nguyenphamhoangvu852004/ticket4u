@@ -15,6 +15,5 @@ func Run() *gin.Engine {
 	InitCloudinaryInstance()
 	InitElasticsearch()
 	app := InitRouter(global.DbQueries, global.Mdbc)
-	InitEurekaClient()
 	return app
 }

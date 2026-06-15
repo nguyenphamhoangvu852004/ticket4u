@@ -1,4 +1,4 @@
-package com.ticket4u.presentation.http.admin;
+package com.ticket4u.controller.admin;
 
 import java.util.UUID;
 

@@ -17,7 +17,8 @@ services:
     image: mysql:8.0
     container_name: user-auth-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: shopdev
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ticket4u
     ports:
       - 3303:3306
     networks:

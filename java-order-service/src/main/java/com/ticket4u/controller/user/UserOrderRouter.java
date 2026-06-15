@@ -1,4 +1,4 @@
-package com.ticket4u.presentation.http.user;
+package com.ticket4u.controller.user;
 
 import java.util.UUID;
 

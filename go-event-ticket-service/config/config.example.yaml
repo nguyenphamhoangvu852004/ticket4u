@@ -7,15 +7,15 @@ cors:
 mysql:
   host: ""
   port: 3306
-  username: ""
-  password: ""
-  dbname: ""
+  username: "root"
+  password: "root"
+  dbname: "ticket4u"
   maxIdleConns: 3
   maxOpenConns: 5
   connMaxLifeTime: 10
 
 redis:
-  host: ""
+  host: "redis-event-ticket-container"
   port: 6379
   password: ""
   database: 0
@@ -32,12 +32,6 @@ jwt:
   accessSecret: "myaccessecrettoken2025"
   accessSecretExpiriedTime: "1h"
 
-googleOAuth:
-  clientId: ""
-  clientSecret: ""
-  authUri: ""
-  redirectUris: ""
-
 kafka:
   brokers:
     - ""
@@ -47,12 +41,7 @@ kafka:
     - "order.updated"
 
 cloudinary:
-  cloudName: ""
-  key: ""
-  secret: ""
-  url: ""
-
-elasticsearch:
-  addresses: "https://localhost:9200"
-  username: elastic
-  password: BQBF6RXMKx+NK2pCgbsp
+  cloudName: "dmsnw2qpd"
+  key: "287679419732832"
+  secret: "9Q0zxL5P9C7BKFqp53rp6Riy1ko"
+  url: "cloudinary://287679419732832:9Q0zxL5P9C7BKFqp53rp6Riy1ko@dmsnw2qpd"

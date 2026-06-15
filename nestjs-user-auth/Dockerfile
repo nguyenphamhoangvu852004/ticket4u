@@ -58,4 +58,4 @@ COPY --from=builder /app/dist ./dist
 EXPOSE 8087
 
 # Chạy mặc định (quyền root)
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/src/main.js"]

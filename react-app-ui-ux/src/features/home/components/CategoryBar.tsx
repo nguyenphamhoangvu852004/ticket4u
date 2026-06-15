@@ -1,8 +1,30 @@
-
-import { CATEGORIES } from "../../../constants/categories";
+import { useEffect, useState } from "react";
+import { BASE_URL_SERVICE } from "../../../constants/api";
 import { Link } from "react-router-dom";
 
+export type Category = {
+  id: string;
+  title: string;
+  href: string;
+};
+
 export default function CategoryBar() {
+  const [categories, setCategories] = useState<Category[]>([]);
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch(BASE_URL_SERVICE + "/categories");
+        const data = await res.json();
+
+        setCategories(data.data.categories);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   return (
     <div className="h-full text-white">
       <div className="bg-[rgb(0,0,0)] w-full h-[60px]">
@@ -11,10 +33,13 @@ export default function CategoryBar() {
             id="catgories-content"
             className="flex items-center justify-start h-full gap-[36px] pl-[28px] pr-[28px]"
           >
-            {CATEGORIES.map((category) => (
-              <div key={category.label}>
-                <Link to={category.href} className="cursor-pointer hover:text-[rgb(45,194,117)] transition-all duration-400">
-                  {category.label}
+            {categories.map((category) => (
+              <div key={category.id}>
+                <Link
+                  to={category.href}
+                  className="cursor-pointer hover:text-[rgb(45,194,117)] transition-all duration-400"
+                >
+                  {category.title}
                 </Link>
               </div>
             ))}

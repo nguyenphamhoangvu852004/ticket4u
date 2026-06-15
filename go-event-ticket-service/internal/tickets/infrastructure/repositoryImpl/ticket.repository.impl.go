@@ -9,10 +9,85 @@ import (
 	"go-event-ticket-service/internal/tickets/domain/repository"
 	"go-event-ticket-service/internal/tickets/infrastructure/params"
 	"go-event-ticket-service/pkg/common"
+	"strings"
 )
 
 type ticketRepository struct {
 	db *database.Queries
+	mysql *sql.DB
+}
+
+// UpdateBatchAmount implements [repository.TicketRepository].
+func (t *ticketRepository) UpdateBatchAmount(ctx context.Context, entities []entity.TicketEntity) (int, error) {
+
+	if len(entities) == 0 {
+		return 0, nil
+	}
+
+	tx, err := t.mysql.BeginTx(ctx, nil)
+	if err != nil {
+		return 0, err
+	}
+
+	defer tx.Rollback()
+
+	var (
+		args        []any
+		caseBuilder strings.Builder
+		idBuilder   strings.Builder
+	)
+
+	caseBuilder.WriteString("CASE id ")
+
+	for i, ticket := range entities {
+
+		caseBuilder.WriteString("WHEN ? THEN sold_quantity + ? ")
+
+		args = append(
+			args,
+			ticket.ID,
+			ticket.SoldQuantity, // amount cần cộng thêm
+		)
+
+		if i > 0 {
+			idBuilder.WriteString(",")
+		}
+
+		idBuilder.WriteString("?")
+		args = append(args, ticket.ID)
+	}
+
+	caseBuilder.WriteString("END")
+
+	query := fmt.Sprintf(`
+		UPDATE tickets
+		SET sold_quantity = %s
+		WHERE id IN (%s)
+	`,
+		caseBuilder.String(),
+		idBuilder.String(),
+	)
+
+	result, err := tx.ExecContext(
+		ctx,
+		query,
+		args...,
+	)
+
+	if err != nil {
+		return 0, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return 0, err
+	}
+
+	return int(rowsAffected), nil
 }
 
 // GetTicketsByIDs implements [repository.TicketRepository].

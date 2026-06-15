@@ -30,24 +30,28 @@ type TicketEntity struct {
 	Deleted_at    int64
 }
 
-func (t *TicketEntity) IsValidQuantity(quantityWantToBuy int) bool {
-	if t.TotalQuantity < uint64(quantityWantToBuy) {
-		return false
-	}
-	return true
+
+func (t *TicketEntity) GetRemainingQuantity() uint64 {
+	return t.TotalQuantity - t.SoldQuantity
 }
 
-func (t *TicketEntity) SetStatus(){
+func (t *TicketEntity) CanReserve(amount int) bool {
+	return t.GetRemainingQuantity() >= uint64(amount)
+}
+
+func (t *TicketEntity) SetStatus() {
 	if t.TotalQuantity == 0 {
-		t.Status= TicketStatusSoldOut
+		t.Status = TicketStatusSoldOut
 	}
 	if t.TotalQuantity > 0 {
-		t.Status= TicketStatusAvailable
+		t.Status = TicketStatusAvailable
 	}
 }
-func (t *TicketEntity) SetQuantity(quantity int){
-	t.SoldQuantity += uint64(quantity)
-	t.TotalQuantity -= uint64(quantity)
+
+func (t *TicketEntity) IncreaseSoldQuantity(quantity int) {
+	if !((t.SoldQuantity + uint64(quantity)) > t.TotalQuantity) {
+		t.SoldQuantity += uint64(quantity)
+	}
 }
 
 func (t *TicketEntity) ToString() string {

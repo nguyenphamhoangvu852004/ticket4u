@@ -23,6 +23,7 @@ type TicketRepository interface {
 	// // Modify
 	// Update(ctx context.Context, entity *entity.EventEntityUpdate) (*entity.EventEntity, error)
 	UpdateAmount(ctx context.Context, entity *entity.TicketEntity) (int, error)
+	UpdateBatchAmount(ctx context.Context, entities []entity.TicketEntity) (int, error)
 	// Delete and restore
 	SoftDelete(ctx context.Context, params *params.DeleteTicketParams) error
 	// Restore(ctx context.Context, params *params.RestoreEventParams) error

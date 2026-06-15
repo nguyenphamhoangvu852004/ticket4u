@@ -98,30 +98,93 @@ func (t *ticketService) GetTicketsByEventTimeId(ctx context.Context, reqData *dt
 // UpdateSoldAmount implements TicketService.
 func (t *ticketService) UpdateSoldAmount(ctx context.Context, reqData *dto.UpdateSoldAmountReq) (*dto.UpdateSoldAmountRes, error) {
 
+	var ticketIDs []string
+
 	for _, ticket := range reqData.Tickets {
-		ticketEntity, err := t.ticketRepo.GetTicketByID(ctx, ticket.TicketId)
-		if err != nil {
-			return nil, err
+		ticketIDs = append(ticketIDs, ticket.TicketId)
+	}
+
+	ticketEntities, err := t.ticketRepo.GetTicketsByIDs(ctx, ticketIDs)
+	if err != nil {
+		return nil, response.NewAPIError(
+			http.StatusNotFound,
+			"ticket not found",
+			nil,
+		)
+	}
+
+	// map[id] => ticketEntity
+	ticketMap := make(map[string]entity.TicketEntity)
+
+	for _, ticketEntity := range ticketEntities {
+		ticketMap[ticketEntity.ID] = ticketEntity
+	}
+
+	// validate
+	for _, reqTicket := range reqData.Tickets {
+
+		ticketEntity, ok := ticketMap[reqTicket.TicketId]
+		if !ok {
+			return nil, response.NewAPIError(
+				http.StatusNotFound,
+				"ticket not found",
+				fmt.Sprintf("TicketID %s not found", reqTicket.TicketId),
+			)
 		}
-		if ticketEntity == nil {
-			return nil, response.NewAPIError(http.StatusNotFound, "ticket not found", fmt.Sprintf("TicketID %s not found", ticket.TicketId))
-		}
-		if !ticketEntity.IsValidQuantity(ticket.Amount) {
-			return nil, response.NewAPIError(http.StatusBadRequest, "ticket is not enough", fmt.Sprintf("TicketID %s insufficient quantity", ticket.TicketId))
-		}
+
 		if ticketEntity.Status == entity.TicketStatusSoldOut {
-			return nil, response.NewAPIError(http.StatusBadRequest, "ticket is sold out", fmt.Sprintf("TicketID %s is sold out", ticket.TicketId))
+			return nil, response.NewAPIError(
+				http.StatusBadRequest,
+				"ticket is sold out",
+				fmt.Sprintf("TicketID %s is sold out", reqTicket.TicketId),
+			)
 		}
-		ticketEntity.SetQuantity(ticket.Amount)
-		ticketEntity.SetStatus()
-		isUpdateAmountSuccess, errr := t.ticketRepo.UpdateAmount(ctx, ticketEntity)
-		if errr != nil {
-			return nil, response.NewAPIError(http.StatusBadRequest,fmt.Sprintf("Update Amount TicketID %s with amount %d fail",ticket.TicketId,ticket.Amount), errr.Error())
-		}
-		if isUpdateAmountSuccess != 1 {
-			return nil, response.NewAPIError(http.StatusBadRequest,fmt.Sprintf("Update Amount TicketID %s with amount %d fail",ticket.TicketId,ticket.Amount), errr.Error())
+
+		if !ticketEntity.CanReserve(reqTicket.Amount) {
+			return nil, response.NewAPIError(
+				http.StatusBadRequest,
+				"ticket is not enough",
+				fmt.Sprintf(
+					"TicketID %s only has %d tickets left",
+					reqTicket.TicketId,
+					ticketEntity.GetRemainingQuantity(),
+				),
+			)
 		}
 	}
+
+	// batch update amount
+	// reserve ticket in memory
+	for _, reqTicket := range reqData.Tickets {
+
+		ticketEntity := ticketMap[reqTicket.TicketId]
+
+		ticketEntity.IncreaseSoldQuantity(int(reqTicket.Amount))
+
+		ticketMap[reqTicket.TicketId] = ticketEntity
+	}
+	var updatedTickets []entity.TicketEntity
+
+	for _, ticketEntity := range ticketMap {
+		updatedTickets = append(updatedTickets, ticketEntity)
+	}
+	affectedRows, err := t.ticketRepo.UpdateBatchAmount(
+		ctx,
+		updatedTickets,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if affectedRows != int(len(updatedTickets)) {
+		return nil, response.NewAPIError(
+			http.StatusInternalServerError,
+			"update ticket failed",
+			nil,
+		)
+	}
+
 	return &dto.UpdateSoldAmountRes{
 		Tickets: reqData.Tickets,
 	}, nil
